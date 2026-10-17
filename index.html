@@ -1,6 +1,13 @@
 <!doctype html>
 <html lang="ru">
 <head>
+<style id="tgp-fonts">
+@font-face{font-family:'Onest';font-style:normal;font-weight:400 700;font-display:swap;src:url(https://mrsvoty.github.io/den-planner-app/fonts/onest-cyrillic.woff2?v=c3f42230) format('woff2');unicode-range:U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116}
+@font-face{font-family:'Onest';font-style:normal;font-weight:400 700;font-display:swap;src:url(https://mrsvoty.github.io/den-planner-app/fonts/onest-latin.woff2?v=cc61cbd6) format('woff2');unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD}
+@font-face{font-family:'Unbounded';font-style:normal;font-weight:500 700;font-display:swap;src:url(https://mrsvoty.github.io/den-planner-app/fonts/unbounded-cyrillic.woff2?v=c3880f0c) format('woff2');unicode-range:U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116}
+@font-face{font-family:'Unbounded';font-style:normal;font-weight:500 700;font-display:swap;src:url(https://mrsvoty.github.io/den-planner-app/fonts/unbounded-latin.woff2?v=d7f07f8a) format('woff2');unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD}
+</style>
+
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="robots" content="noindex">
@@ -12,7 +19,7 @@
      Telegram initData (in the URL #hash) stays on this page and is sent only to the backend in X-Init-Data. -->
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <style>
-html,body{margin:0;height:100%;background:#0B0C10;color:#F1F2F5;font:16px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+html,body{margin:0;height:100%;background:#0B0C10;color:#F1F2F5;font:16px/1.45 "Onest",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
 #l{white-space:pre-line;min-height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:24px;box-sizing:border-box;text-align:center}
 .sp{width:36px;height:36px;border-radius:50%;border:4px solid #1D2028;border-top-color:#8B9DFF;animation:r 1s linear infinite}
 @keyframes r{to{transform:rotate(360deg)}}
@@ -41,7 +48,7 @@ button{font:inherit;padding:10px 18px;border-radius:12px;border:0;background:#8B
  var verified=false;
  if(!/^https:\/\/[a-z0-9-]+(\.[a-z0-9-]+)*(:\d{1,5})?$/i.test(u)||!/^[A-Za-z0-9_-]{80,90}$/.test(sig)||!PUBKEY||!(window.crypto&&crypto.subtle&&window.TextEncoder)){fail(M.direct);return;}
  function bytes(b64){b64=b64.replace(/-/g,'+').replace(/_/g,'/');while(b64.length%4)b64+='=';var s=atob(b64),a=new Uint8Array(s.length);for(var i=0;i<s.length;i++)a[i]=s.charCodeAt(i);return a;}
- var APP_FILE='app.c4cf3ef4b7.html';
+ var APP_FILE='app.cbf3c2a789.html';
  var initData=(tg&&tg.initData)||'';
  var host=u.replace(/^https:\/\//,'');
  var stage='start',tries=0,done=false,t0=Date.now();
