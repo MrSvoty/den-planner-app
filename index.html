@@ -1,27 +1,21 @@
 <!doctype html>
 <html lang="ru">
 <head>
-<style id="tgp-fonts">
-@font-face{font-family:'Onest';font-style:normal;font-weight:400 700;font-display:swap;src:url(https://mrsvoty.github.io/den-planner-app/fonts/onest-cyrillic.woff2?v=c3f42230) format('woff2');unicode-range:U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116}
-@font-face{font-family:'Onest';font-style:normal;font-weight:400 700;font-display:swap;src:url(https://mrsvoty.github.io/den-planner-app/fonts/onest-latin.woff2?v=cc61cbd6) format('woff2');unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD}
-@font-face{font-family:'Unbounded';font-style:normal;font-weight:500 700;font-display:swap;src:url(https://mrsvoty.github.io/den-planner-app/fonts/unbounded-cyrillic.woff2?v=c3880f0c) format('woff2');unicode-range:U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116}
-@font-face{font-family:'Unbounded';font-style:normal;font-weight:500 700;font-display:swap;src:url(https://mrsvoty.github.io/den-planner-app/fonts/unbounded-latin.woff2?v=d7f07f8a) format('woff2');unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD}
-</style>
-
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,interactive-widget=resizes-content">
 <meta name="robots" content="noindex">
-<title>Ежедневник</title>
-<!-- Static loader for the Telegram Mini App «Ежедневник» (@napominalkaMINE_bot).
-     Contains no user data and no secrets. The bot opens this page as
-     https://mrsvoty.github.io/den-planner-app/?u=<current backend URL>; the page fetches the app from that
-     backend with the X-Pinggy-No-Screen header (so no tunnel warning page) and renders it here.
-     Telegram initData (in the URL #hash) stays on this page and is sent only to the backend in X-Init-Data. -->
+<meta name="theme-color" content="#0B0C10">
+<title>День</title>
+<!-- TEMPORARY local patch (see LOCAL_PATCHES.md): static loader for the «День» client while the bot has no
+     permanent domain. The bot opens https://mrsvoty.github.io/den-planner-app/?u=<tunnel>&s=<ECDSA signature>.
+     The client (app.<hash>.html, same build as /app/) is served from here; the tunnel carries only the JSON API.
+     No user data, no secrets. Telegram initData is sent nowhere until the backend signature checks out. -->
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <style>
-html,body{margin:0;height:100%;background:#0B0C10;color:#F1F2F5;font:16px/1.45 "Onest",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+html,body{margin:0;height:100%;background:#0B0C10;color:#F1F2F5;font:16px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+@media(prefers-color-scheme:light){html,body{background:#F5F6F8;color:#14161B}}
 #l{white-space:pre-line;min-height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:24px;box-sizing:border-box;text-align:center}
-.sp{width:36px;height:36px;border-radius:50%;border:4px solid #1D2028;border-top-color:#8B9DFF;animation:r 1s linear infinite}
+.sp{width:36px;height:36px;border-radius:50%;border:4px solid #8B9DFF33;border-top-color:#8B9DFF;animation:r 1s linear infinite}
 @keyframes r{to{transform:rotate(360deg)}}
 button{font:inherit;padding:10px 18px;border-radius:12px;border:0;background:#8B9DFF;color:#0B0C10;font-weight:700}
 </style>
@@ -31,66 +25,49 @@ button{font:inherit;padding:10px 18px;border-radius:12px;border:0;background:#8B
 <script>
 (function(){
  'use strict';
- var en=false;try{en=localStorage.getItem('tgp-lang')==='en';}catch(e){}
- var M=en?{load:'Loading planner…',stale:'Could not load the planner.',how:'Check your internet connection, close this window and open the planner again with the «Ежедневник» menu button or /app.',retry:'Try again',close:'Close',direct:'Open the planner from the bot: «Ежедневник» menu button or /app.'}
-         :{load:'Загрузка ежедневника…',stale:'Не удалось загрузить ежедневник.',how:'Проверьте интернет, закройте окно и откройте ежедневник снова кнопкой меню «Ежедневник» или командой /app.',retry:'Повторить',close:'Закрыть',direct:'Откройте ежедневник из бота: кнопка меню «Ежедневник» или команда /app.'};
  var tg=window.Telegram&&window.Telegram.WebApp;
  try{tg&&tg.ready();tg&&tg.expand();}catch(e){}
  var box=document.getElementById('l');
- document.getElementById('m').textContent=M.load;
+ var DIRECT='Откройте ежедневник из бота: кнопка меню «Ежедневник» или команда /app.';
  function fail(msg){box.innerHTML='';var p=document.createElement('p');p.textContent=msg;box.appendChild(p);
-  var r=document.createElement('button');r.textContent=M.retry;r.onclick=function(){location.reload();};box.appendChild(r);
-  if(tg&&tg.close){var c=document.createElement('button');c.textContent=M.close;c.style.background='#8a98a6';c.onclick=function(){tg.close();};box.appendChild(c);}}
+  var r=document.createElement('button');r.textContent='Повторить';r.onclick=function(){location.reload();};box.appendChild(r);
+  if(tg&&tg.close){var c=document.createElement('button');c.textContent='Закрыть';c.style.background='#8a98a6';c.onclick=function(){tg.close();};box.appendChild(c);}}
  var q=new URLSearchParams(location.search),u=(q.get('u')||'').replace(/\/+$/,''),sig=q.get('s')||'';
- // the backend URL must be signed by the bot (ECDSA P-256, key in the bot's data/); anyone can open a tunnel,
- // so the host name alone proves nothing. initData is sent nowhere until the signature checks out.
+ // the backend URL must be signed by the bot (ECDSA P-256, private key in the bot's data/); anyone can open a tunnel
  var PUBKEY='MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEvfDzTlhnSRzNsoLPi6DBpv0vmeDmVyXI+/K8cRh20pmdW2RKkPmESQmdcnqUCLDXGSecsln/cQRLSdDJHPdbtQ==';
- var verified=false;
- if(!/^https:\/\/[a-z0-9-]+(\.[a-z0-9-]+)*(:\d{1,5})?$/i.test(u)||!/^[A-Za-z0-9_-]{80,90}$/.test(sig)||!PUBKEY||!(window.crypto&&crypto.subtle&&window.TextEncoder)){fail(M.direct);return;}
+ var APP_FILE='app.787a19af88.html';
+ if(!/^https:\/\/[a-z0-9-]+(\.[a-z0-9-]+)*(:\d{1,5})?$/i.test(u)||!/^[A-Za-z0-9_-]{80,90}$/.test(sig)||!PUBKEY||!(window.crypto&&crypto.subtle&&window.TextEncoder)){fail(DIRECT);return;}
  function bytes(b64){b64=b64.replace(/-/g,'+').replace(/_/g,'/');while(b64.length%4)b64+='=';var s=atob(b64),a=new Uint8Array(s.length);for(var i=0;i<s.length;i++)a[i]=s.charCodeAt(i);return a;}
- var APP_FILE='app.cbf3c2a789.html';
- var initData=(tg&&tg.initData)||'';
- var host=u.replace(/^https:\/\//,'');
- var stage='start',tries=0,done=false,t0=Date.now();
- var msgEl=document.getElementById('m');
- function setStage(s,txt){stage=s;if(msgEl)msgEl.textContent=txt;}
- function beacon(err){if(!verified)return;try{fetch(u+'/api/clientlog',{method:'POST',headers:{'Content-Type':'application/json','X-Init-Data':initData,'X-Pinggy-No-Screen':'1'},body:JSON.stringify({stage:stage,error:String(err),ms:Date.now()-t0,tries:tries,ua:navigator.userAgent,hasInit:!!initData})}).catch(function(){});}catch(e){}}
- function hardFail(err){if(done)return;done=true;beacon(err);
-  fail(M.stale+' '+M.how+'\n\n'+(en?'Details: ':'Подробности: ')+String(err)+' · '+stage+' · '+host+' · '+Math.round((Date.now()-t0)/1000)+(en?' s':' с'));}
- if(!initData){setStage('noinit','');}
- // overall watchdog: never spin forever
- var wd=setTimeout(function(){hardFail(en?'timeout 40 s':'нет ответа 40 с');},40000);
+ var tries=0,done=false,t0=Date.now();
+ var wd=setTimeout(function(){if(done)return;done=true;fail('Не удалось загрузить ежедневник: нет ответа 40 с. Проверьте интернет и откройте снова.');},40000);
  function load(){
   tries++;
   var ctl=window.AbortController?new AbortController():null;
   var to=setTimeout(function(){ctl&&ctl.abort();},15000);
-  setStage('connect',(en?'Loading the planner…':'Загрузка ежедневника…')+(tries>1?' ('+tries+')':''));
-  // the app itself (HTML/JS/CSS/i18n) is a static, versioned file on GitHub Pages; the tunnel serves only small JSON API calls
   fetch(APP_FILE,{cache:'force-cache',credentials:'omit',signal:ctl?ctl.signal:undefined}).then(function(r){
-   if(!r.ok)throw Error('HTTP '+r.status);
-   setStage('download',en?'Loading the planner…':'Загрузка ежедневника…');
-   return r.text();
+   if(!r.ok)throw Error('HTTP '+r.status);return r.text();
   }).then(function(html){
    clearTimeout(to);
-   if(html.indexOf('id="planner-seed"')<0)throw Error(en?'unexpected server response':'неожиданный ответ сервера');
-   if(done)return;done=true;clearTimeout(wd);stage='render';
-   html=html.replace(/<script[^>]*telegram-web-app\.js[^>]*><\/script>/,'');
-   html=html.replace(/<head>/i,'<head><script>window.TGP_API_BASE='+JSON.stringify(u+'/')+';window.TGP_LOADER_T0='+t0+';<\/script>');
+   if(html.indexOf('id="cfg"')<0)throw Error('неожиданный файл приложения');
+   if(done)return;done=true;clearTimeout(wd);
+   var api=u+'/';
+   // API base for the client + the Pinggy header on every API call (the free tunnel otherwise shows its warning page)
+   var head='<script>window.DEN_API_BASE='+JSON.stringify(api)+';(function(){var f=window.fetch.bind(window),A='+JSON.stringify(api)+';'+
+    'window.fetch=function(i,o){var url=typeof i==="string"?i:(i&&i.url)||"";if(url.indexOf(A)===0){o=Object.assign({},o||{});'+
+    'var h=new Headers(o.headers||(typeof i!=="string"&&i.headers)||{});h.set("X-Pinggy-No-Screen","1");o.headers=h;}return f(i,o);};})();<\/script>';
+   html=html.replace(/<head>/i,'<head>'+head);
    document.open();document.write(html);document.close();
   }).catch(function(e){
    clearTimeout(to);if(done)return;
-   var err=(e&&e.name==='AbortError')?(en?'timeout 15 s':'нет ответа 15 с'):(e&&e.message||String(e));
    if(tries<3){setTimeout(load,1500*tries);return;}
-   hardFail(err);
+   done=true;clearTimeout(wd);
+   fail('Не удалось загрузить ежедневник. Проверьте интернет и откройте снова.\n\nПодробности: '+((e&&e.name==='AbortError')?'нет ответа 15 с':(e&&e.message||String(e))));
   });
  }
- setStage('verify',M.load);
  crypto.subtle.importKey('spki',bytes(PUBKEY),{name:'ECDSA',namedCurve:'P-256'},false,['verify']).then(function(k){
   return crypto.subtle.verify({name:'ECDSA',hash:'SHA-256'},k,bytes(sig),new TextEncoder().encode('tgp-backend:'+u));
- }).then(function(good){
-  if(!good)throw Error('bad signature');
-  verified=true;load();
- }).catch(function(){if(done)return;done=true;clearTimeout(wd);fail(M.direct);});
+ }).then(function(good){if(!good)throw Error('bad signature');load();})
+ .catch(function(){if(done)return;done=true;clearTimeout(wd);fail(DIRECT);});
 })();
 </script>
 </body>

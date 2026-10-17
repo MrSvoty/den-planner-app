@@ -1,0 +1,1377 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,interactive-widget=resizes-content">
+<meta name="theme-color" content="#0B0C10">
+<meta name="robots" content="noindex">
+<title>День</title>
+
+<script>
+/* messenger SDKs only inside the messenger (Telegram passes #tgWebAppData, MAX passes #WebAppData) */
+(function(){if(window.Telegram&&window.Telegram.WebApp)return;var h=location.hash,s='';try{s=sessionStorage.getItem('__telegram__initParams')||''}catch(e){}
+if(/tgWebAppData/.test(h)||/tgWebAppData/.test(s))document.write('<script src="https://telegram.org/js/telegram-web-app.js"><\/script>');
+else if(/(^|[#&])WebAppData=/.test(h))document.write('<script src="https://st.max.ru/js/max-web-app.js"><\/script>');})();
+</script>
+<style>/* «День» v5 — one geometry for light and dark; only the colour variables change.
+   In Telegram/MAX the variables take the messenger's colours (platform.js), elsewhere prefers-color-scheme. */
+:root{
+ --bg:#F4F5F7;--surface:#FFFFFF;--surface-2:#ECEEF2;--line:#E1E4EA;--text:#14161B;--muted:#5B6270;--faint:#8A909C;
+ --accent:#3D5AFE;--accent-ink:#FFFFFF;--accent-soft:#E6EAFF;--accent-text:#2A3CB8;
+ --warn:#C2410C;--warn-soft:#FFF0E5;--ok:#0F8A5F;--ok-soft:#E1F5EC;--danger:#C62828;--danger-soft:#FDECEC;
+ --shadow:0 10px 40px #14161B1F;--radius:18px;--tap:48px;
+ --font:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",sans-serif;
+ color-scheme:light;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme=light]){
+ --bg:#0B0C10;--surface:#15171D;--surface-2:#1D2028;--line:#272A33;--text:#F1F2F5;--muted:#9EA4B2;--faint:#6E7482;
+ --accent:#8B9DFF;--accent-ink:#0B0C10;--accent-soft:#20264A;--accent-text:#C3CCFF;
+ --warn:#FF9F5A;--warn-soft:#33200F;--ok:#3DD68C;--ok-soft:#11291F;--danger:#FF8A80;--danger-soft:#2A1416;
+ --shadow:0 20px 60px #00000080;color-scheme:dark}}
+:root[data-theme=dark]{
+ --bg:#0B0C10;--surface:#15171D;--surface-2:#1D2028;--line:#272A33;--text:#F1F2F5;--muted:#9EA4B2;--faint:#6E7482;
+ --accent:#8B9DFF;--accent-ink:#0B0C10;--accent-soft:#20264A;--accent-text:#C3CCFF;
+ --warn:#FF9F5A;--warn-soft:#33200F;--ok:#3DD68C;--ok-soft:#11291F;--danger:#FF8A80;--danger-soft:#2A1416;
+ --shadow:0 20px 60px #00000080;color-scheme:dark}
+
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:var(--bg);color:var(--text);font:15px/1.45 var(--font);-webkit-font-smoothing:antialiased;overscroll-behavior:none}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer;border:0;background:none;padding:0}
+a{color:var(--accent-text)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.hidden{display:none!important}
+svg.i{width:22px;height:22px;flex:none;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+
+/* ---------- shell ---------- */
+.app{display:flex;flex-direction:column;height:100dvh;max-width:1180px;margin:0 auto}
+.top{display:flex;align-items:center;gap:8px;padding:10px 12px 8px;padding-top:max(10px,env(safe-area-inset-top))}
+.chips{display:flex;gap:6px;overflow-x:auto;flex:1;min-width:0;scrollbar-width:none;padding:2px}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:none;min-height:38px;padding:0 14px;border-radius:999px;background:var(--surface);border:1px solid var(--line);font-weight:600;font-size:14px;white-space:nowrap}
+.chip[aria-pressed=true]{background:var(--text);color:var(--bg);border-color:var(--text)}
+.sync{flex:none;display:flex;align-items:center;gap:7px;min-height:var(--tap);padding:0 10px;border-radius:14px;font-size:12.5px;color:var(--muted);max-width:46%}
+.sync .dot{width:9px;height:9px;border-radius:50%;background:var(--ok);flex:none;box-shadow:0 0 0 3px var(--ok-soft)}
+.sync[data-state=sending] .dot,.sync[data-state=offline] .dot,.sync[data-state=local] .dot,.sync[data-state=error] .dot{background:var(--warn);box-shadow:0 0 0 3px var(--warn-soft)}
+.sync[data-state=auth] .dot,.sync[data-state=memory] .dot{background:var(--danger);box-shadow:0 0 0 3px var(--danger-soft)}
+.sync span:last-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+.body{flex:1;min-height:0;display:grid;grid-template-columns:1fr;overflow:hidden}
+.side{display:none}
+.view{overflow-y:auto;padding:4px 16px 16px;-webkit-overflow-scrolling:touch}
+.view>section{margin-bottom:18px}
+
+h1.title{margin:6px 4px 12px;font-size:28px;line-height:1.1;letter-spacing:-.02em}
+.sec-h{display:flex;align-items:center;justify-content:space-between;margin:0 4px 8px;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.sec-h.warn{color:var(--warn)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius)}
+.list{display:flex;flex-direction:column;overflow:hidden}
+
+/* ---------- task row ---------- */
+.task{position:relative;display:flex;align-items:flex-start;gap:4px;padding:6px 6px 6px 2px;min-height:56px;background:var(--surface);touch-action:pan-y;transition:transform .18s ease}
+.task+.task{border-top:1px solid var(--line)}
+.check{width:var(--tap);height:var(--tap);flex:none;display:flex;align-items:center;justify-content:center}
+.check span{width:24px;height:24px;border-radius:50%;border:2px solid var(--faint);display:flex;align-items:center;justify-content:center;transition:transform .15s}
+.check svg{width:14px;height:14px;stroke:var(--accent-ink);stroke-width:3.2;fill:none;opacity:0}
+.task.done .check span{background:var(--accent);border-color:var(--accent)}
+.task.done .check svg{opacity:1}
+.check:active span{transform:scale(.85)}
+.t-main{flex:1;min-width:0;padding:7px 2px;text-align:left;display:flex;flex-direction:column;gap:4px}
+.t-title{font-size:15.5px;font-weight:500;overflow-wrap:anywhere}
+.task.done .t-title{color:var(--faint);text-decoration:line-through}
+.meta{display:flex;flex-wrap:wrap;gap:5px;font-size:12.5px;color:var(--muted);align-items:center}
+.tag{padding:1px 8px;border-radius:999px;background:var(--surface-2);color:var(--muted);font-weight:600}
+.tag.time{background:none;padding:0;color:var(--text);font-variant-numeric:tabular-nums}
+.tag.hi{background:var(--accent-soft);color:var(--accent-text)}
+.tag.late{background:var(--warn-soft);color:var(--warn)}
+.tag.conf{background:var(--danger-soft);color:var(--danger)}
+.tag.pend{background:none;padding:0;color:var(--faint)}
+.t-act{flex:none;min-width:var(--tap);height:var(--tap);border-radius:12px;color:var(--muted);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;padding:0 8px}
+.t-act:hover{background:var(--surface-2)}
+.swipe-bg{position:absolute;inset:0;display:flex;justify-content:space-between;align-items:center;padding:0 18px;font-weight:700;font-size:14px}
+.empty{padding:28px 18px;text-align:center;color:var(--muted)}
+.empty b{display:block;color:var(--text);font-size:17px;margin-bottom:4px}
+details.done-box>summary{list-style:none;cursor:pointer;min-height:var(--tap);display:flex;align-items:center}
+details.done-box>summary::-webkit-details-marker{display:none}
+
+/* ---------- smart input + bottom nav ---------- */
+.dock{padding:8px 12px calc(6px + env(safe-area-inset-bottom));background:var(--bg);border-top:1px solid var(--line)}
+.compose{display:flex;gap:8px;align-items:center}
+.compose input{flex:1;min-width:0;height:var(--tap);padding:0 16px;border-radius:16px;border:1px solid var(--line);background:var(--surface);font-size:16px;outline:none}
+.compose input:focus{border-color:var(--accent)}
+.send{width:var(--tap);height:var(--tap);flex:none;border-radius:16px;background:var(--accent);color:var(--accent-ink);display:flex;align-items:center;justify-content:center}
+.send svg{stroke:var(--accent-ink)}
+.preview{display:flex;flex-wrap:wrap;gap:6px;padding:6px 2px 0}
+.preview:empty{display:none}
+.preview button{min-height:30px;padding:0 10px;border-radius:999px;background:var(--accent-soft);color:var(--accent-text);font-size:13px;font-weight:600}
+.preview button::after{content:" ×";opacity:.6}
+.tabs{display:grid;grid-template-columns:repeat(3,1fr);margin-top:6px}
+.tabs button{min-height:52px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:11.5px;font-weight:600;color:var(--muted);border-radius:14px}
+.tabs button[aria-current=page]{color:var(--accent-text)}
+.tabs button[aria-current=page] svg{background:var(--accent-soft);border-radius:999px;padding:3px 16px;box-sizing:content-box}
+
+/* ---------- calendar ---------- */
+.cal-head{display:flex;align-items:center;justify-content:space-between;margin:4px 4px 10px}
+.cal-head h2{margin:0;font-size:20px;text-transform:capitalize}
+.icon-btn{width:var(--tap);height:var(--tap);border-radius:14px;display:flex;align-items:center;justify-content:center;color:var(--text)}
+.icon-btn:hover{background:var(--surface-2)}
+.grid7{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}
+.wd{text-align:center;font-size:11px;color:var(--muted);padding:4px 0}
+.day{position:relative;aspect-ratio:1;min-height:40px;border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-weight:600;font-size:14px;background:var(--surface);border:1px solid transparent}
+.day.out{opacity:.35}
+.day.today{border-color:var(--accent)}
+.day[aria-pressed=true]{background:var(--text);color:var(--bg)}
+.day .dots{position:absolute;bottom:5px;display:flex;gap:2px}
+.day .dots i{width:4px;height:4px;border-radius:50%;background:var(--accent)}
+.day[aria-pressed=true] .dots i{background:var(--bg)}
+.day.p1{background:color-mix(in srgb,var(--ok) 22%,var(--surface))}
+.day.p2{background:color-mix(in srgb,var(--ok) 42%,var(--surface))}
+.day.p3{background:color-mix(in srgb,var(--ok) 64%,var(--surface))}
+.day.p4{background:color-mix(in srgb,var(--ok) 86%,var(--surface));color:#0B0C10}
+.day .star{position:absolute;top:1px;right:3px;font-size:10px}
+.event{display:flex;gap:10px;padding:10px 14px;font-size:14px}
+.event+.event,.event+.task,.task+.event{border-top:1px solid var(--line)}
+.event b{color:var(--accent-text);font-weight:600;min-width:86px;font-variant-numeric:tabular-nums}
+
+/* ---------- profile ---------- */
+.row{display:flex;align-items:center;gap:12px;min-height:56px;padding:8px 14px;width:100%;text-align:left}
+.row+.row{border-top:1px solid var(--line)}
+.row .grow{flex:1;min-width:0}
+.row small{display:block;color:var(--muted);font-size:13px}
+.btn{min-height:var(--tap);padding:0 18px;border-radius:14px;background:var(--surface-2);font-weight:600;display:inline-flex;align-items:center;justify-content:center;gap:8px}
+.btn.primary{background:var(--accent);color:var(--accent-ink)}
+.btn.danger{color:var(--danger);background:var(--danger-soft)}
+.btn.block{width:100%}
+.btns{display:flex;flex-wrap:wrap;gap:8px}
+.field{display:flex;flex-direction:column;gap:5px;margin-bottom:12px;font-size:13px;color:var(--muted)}
+.field input,.field select,.field textarea{min-height:var(--tap);padding:10px 14px;border-radius:14px;border:1px solid var(--line);background:var(--bg);color:var(--text);font-size:16px}
+.field textarea{min-height:90px;resize:vertical}
+.code{font:700 28px/1.2 ui-monospace,Menlo,Consolas,monospace;letter-spacing:.18em;text-align:center;padding:14px;border-radius:14px;background:var(--surface-2)}
+.pad{padding:16px}
+.muted{color:var(--muted)}
+
+/* ---------- game ---------- */
+.game{padding:16px;display:flex;flex-direction:column;gap:12px}
+.lvl{display:flex;align-items:center;gap:14px}
+.badge-lvl{width:58px;height:58px;border-radius:18px;flex:none;background:var(--accent);color:var(--accent-ink);display:flex;flex-direction:column;align-items:center;justify-content:center;font-weight:800;font-size:22px;line-height:1}
+.badge-lvl small{font-size:10px;font-weight:700;opacity:.8}
+.bar{height:10px;border-radius:999px;background:var(--surface-2);overflow:hidden}
+.bar i{display:block;height:100%;background:var(--accent);border-radius:999px;transition:width .4s}
+.stats3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.stat{padding:10px;border-radius:14px;background:var(--surface-2);text-align:center}
+.stat b{display:block;font-size:20px}
+.stat small{color:var(--muted);font-size:12px}
+.ach{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px}
+.ach div{padding:10px;border-radius:14px;background:var(--surface-2);font-size:13px}
+.ach div.got{background:var(--ok-soft)}
+.ach div:not(.got){opacity:.55}
+.ach b{display:block;font-size:13.5px}
+.fx{position:fixed;inset:0;pointer-events:none;z-index:60;overflow:hidden}
+.fx i{position:absolute;width:9px;height:14px;border-radius:2px;animation:fall 1.1s ease-out forwards}
+.fx .xp{position:absolute;font-weight:800;font-size:20px;color:var(--accent-text);animation:rise 1.1s ease-out forwards}
+@keyframes fall{to{transform:translate(var(--dx),var(--dy)) rotate(540deg);opacity:0}}
+@keyframes rise{to{transform:translateY(-70px);opacity:0}}
+@media (prefers-reduced-motion:reduce){.fx{display:none}.task{transition:none}}
+
+/* ---------- sheet & toast ---------- */
+.scrim{position:fixed;inset:0;background:#00000080;z-index:40;display:flex;align-items:flex-end;justify-content:center}
+.sheet{width:100%;max-width:560px;max-height:92dvh;overflow-y:auto;background:var(--surface);border-radius:26px 26px 0 0;padding:8px 18px calc(18px + env(safe-area-inset-bottom));box-shadow:var(--shadow)}
+.sheet .grip{width:40px;height:5px;border-radius:3px;background:var(--line);margin:4px auto 12px}
+.sheet h2{margin:0 0 14px;font-size:21px}
+.toast{position:fixed;left:50%;bottom:calc(150px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:50;display:flex;align-items:center;gap:12px;max-width:calc(100vw - 32px);padding:10px 10px 10px 16px;border-radius:16px;background:var(--text);color:var(--bg);box-shadow:var(--shadow);font-size:14px}
+.toast button{min-height:40px;padding:0 12px;border-radius:12px;color:var(--bg);font-weight:700;text-decoration:underline}
+.welcome{max-width:460px;margin:8vh auto;padding:0 16px;display:flex;flex-direction:column;gap:12px}
+.welcome h1{font-size:34px;margin:0}
+
+/* ---------- wide screens: two columns ---------- */
+@media (min-width:900px){
+ .body{grid-template-columns:340px 1fr;gap:16px;padding:0 16px}
+ .side{display:block;overflow-y:auto;padding:4px 0 16px}
+ .view{padding:4px 0 16px}
+ .tabs{display:none}
+ .dock{border-top:0;padding:10px 16px 16px;margin-left:356px}
+ .scrim{align-items:center}
+ .sheet{border-radius:26px}
+ .side .grid7 .day{min-height:34px;font-size:13px}
+ .side-nav{display:flex;gap:6px;margin-bottom:12px}
+}
+@media (max-width:899px){.side-nav{display:none}}
+</style>
+</head>
+<body>
+<div id="app" class="app">
+ <header class="top">
+  <nav class="chips" id="chips" aria-label="Ежедневники"></nav>
+  <button class="sync" id="sync" data-state="local" aria-label="Синхронизация"><span class="dot"></span><span>…</span></button>
+ </header>
+ <div class="body">
+  <aside class="side" id="side-wrap">
+   <div class="side-nav"><button class="btn" data-tab="plan">План</button><button class="btn" data-tab="me">Профиль</button></div>
+   <div id="side"></div>
+  </aside>
+  <main class="view" id="view" aria-live="polite"></main>
+ </div>
+ <div class="dock">
+  <form class="compose" id="compose-form" autocomplete="off">
+   <label for="compose" class="sr">Новая задача</label>
+   <input id="compose" maxlength="500" enterkeyhint="send" placeholder="Новая задача: «завтра в 10 созвон #работа»">
+   <button class="send" type="submit" aria-label="Добавить"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 19V5M5 12l7-7 7 7"/></svg></button>
+  </form>
+  <div class="preview" id="preview" aria-label="Распознано"></div>
+  <nav class="tabs" aria-label="Разделы">
+   <button data-tab="plan" aria-current="page"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h10"/></svg>План</button>
+   <button data-tab="cal"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>Календарь</button>
+   <button data-tab="me"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8.5" r="3.5"/><path d="M5 20c.8-3.6 3.6-5.6 7-5.6s6.2 2 7 5.6"/></svg>Профиль</button>
+  </nav>
+ </div>
+</div>
+<script id="cfg" type="application/json">{"mode": "server", "api": null, "user_id": null, "snapshot": null, "built": "ecc7025504"}</script>
+<script>/* Core: dates in the planner time zone, smart-input parser (mirror of nlp_parser.py — same cases in
+   tests/parser_cases.json), plan grouping and the game rules (mirror of game.py). No DOM, no network. */
+const Core = (() => {
+ 'use strict';
+ const TZ = 'Europe/Moscow';
+ const pad = n => String(n).padStart(2, '0');
+
+ // ---------- dates (all "YYYY-MM-DD" strings are dates in the planner time zone) ----------
+ function partsInTZ(ms) {
+  const f = new Intl.DateTimeFormat('en-CA', {timeZone: TZ, year: 'numeric', month: '2-digit', day: '2-digit',
+   hour: '2-digit', minute: '2-digit', hourCycle: 'h23', weekday: 'short'});
+  const o = {}; for (const p of f.formatToParts(new Date(ms))) o[p.type] = p.value;
+  return {date: `${o.year}-${o.month}-${o.day}`, hour: +o.hour, minute: +o.minute,
+   weekday: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].indexOf(o.weekday)};
+ }
+ const today = (now = Date.now()) => partsInTZ(now).date;
+ function addDays(date, n) {
+  const [y, m, d] = date.split('-').map(Number);
+  const t = new Date(Date.UTC(y, m - 1, d + n));
+  return `${t.getUTCFullYear()}-${pad(t.getUTCMonth() + 1)}-${pad(t.getUTCDate())}`;
+ }
+ function weekdayOf(date) { const [y, m, d] = date.split('-').map(Number); return (new Date(Date.UTC(y, m - 1, d)).getUTCDay() + 6) % 7; }
+ const MONTHS_GEN = ['января', 'февраля', 'марта', 'апреля', 'мая', 'июня', 'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'];
+ const MONTHS = ['январь', 'февраль', 'март', 'апрель', 'май', 'июнь', 'июль', 'август', 'сентябрь', 'октябрь', 'ноябрь', 'декабрь'];
+ const WD = ['пн', 'вт', 'ср', 'чт', 'пт', 'сб', 'вс'];
+ const WD_FULL = ['понедельник', 'вторник', 'среда', 'четверг', 'пятница', 'суббота', 'воскресенье'];
+ function human(date, now = Date.now()) {
+  if (!date) return 'без даты';
+  const t = today(now);
+  if (date === t) return 'сегодня';
+  if (date === addDays(t, 1)) return 'завтра';
+  if (date === addDays(t, -1)) return 'вчера';
+  const [y, m, d] = date.split('-').map(Number);
+  return `${WD[weekdayOf(date)]}, ${d} ${MONTHS_GEN[m - 1]}` + (String(y) !== t.slice(0, 4) ? ` ${y}` : '');
+ }
+ const uuid = () => (crypto.randomUUID ? crypto.randomUUID() : 'x' + Date.now().toString(36) + Math.random().toString(36).slice(2)).replace(/[^-A-Za-z0-9_]/g, '');
+
+ // ---------- smart input (same grammar as nlp_parser.py) ----------
+ const NUM_WORDS = {один: 1, одну: 1, одна: 1, два: 2, две: 2, три: 3, четыре: 4, пять: 5, шесть: 6, семь: 7, восемь: 8,
+  девять: 9, десять: 10, пятнадцать: 15, двадцать: 20, тридцать: 30, сорок: 40, пол: 0.5, полтора: 1.5, полторы: 1.5};
+ const NUM = '(\\d+|' + Object.keys(NUM_WORDS).sort((a, b) => b.length - a.length).join('|') + ')';
+ const HOUR_WORDS = {час: 1, два: 2, три: 3, четыре: 4, пять: 5, шесть: 6, семь: 7, восемь: 8, девять: 9, десять: 10, одиннадцать: 11, двенадцать: 12};
+ const MONTH_RE = '(января|февраля|марта|апреля|мая|июня|июля|августа|сентября|октября|ноября|декабря)';
+ const MONTH_KEYS = ['январ', 'феврал', 'март', 'апрел', 'ма', 'июн', 'июл', 'август', 'сентябр', 'октябр', 'ноябр', 'декабр'];
+ const WEEKDAYS = [['понедельник|пн', 0], ['вторник|вт', 1], ['сред[уаы]|ср', 2], ['четверг|чт', 3], ['пятниц[уаы]|пт', 4], ['суббот[уаы]|сб', 5], ['воскресенье|вс', 6]];
+ const W = '[\\p{L}\\d_]';
+ // word-start emulated with a captured prefix (no look-behind: older iOS WebViews lack it)
+ const rx = (body, flags = 'iu') => new RegExp(`(^|[^\\p{L}\\d_])(?:${body})(?!${W})`, flags);
+ const num = s => s == null ? 1 : (/^\d+$/.test(s) ? +s : (NUM_WORDS[s.toLowerCase()] ?? 1));
+ function unitMin(u) {
+  u = u.toLowerCase();
+  if (u.startsWith('мин')) return 1;
+  if (u.startsWith('час') || u === 'ч') return 60;
+  if (u.startsWith('дн') || u.startsWith('ден') || u.startsWith('сут')) return 1440;
+  if (u.startsWith('недел')) return 10080;
+  if (u.startsWith('месяц')) return 43200;
+  return 1;
+ }
+ function mkTime(h, mi, suffix, explicit) {
+  if ((suffix === 'дня' || suffix === 'вечера') && h < 12) h += 12;
+  else if (suffix === 'ночи' && h === 12) h = 0;
+  else if (!suffix && !explicit && h >= 1 && h <= 6) h += 12;
+  return [h % 24, mi];
+ }
+ const FILLERS = /^(?:\s*(?:(?:на|за)?помни(?:м|те)?(?:\s+мне)?|поставь(?:\s+мне)?(?:\s+(?:задачу|задание|напоминание))?(?:\s+на)?|создай(?:\s+задачу)?|запиши|добавь(?:\s+задачу)?|надо|нужно|не\s+забыть|пожалуйста|задача)(?![\p{L}\d_])[\s,:-]*){1,2}/iu;
+
+ /** parse(text, nowMs, planners) -> {title, date, time, remind, priority, repeat, plannerId, tokens} */
+ function parse(text, now = Date.now(), planners = []) {
+  const P = partsInTZ(now);
+  let s = ' ' + String(text || '').trim().replace(new RegExp(`(^|[^\\p{L}\\d_])(в|к|до)\\s+(${Object.keys(HOUR_WORDS).sort((a, b) => b.length - a.length).join('|')})(\\s+(?:утра|дня|вечера|ночи|часов|часа)|(?=\\s*$))`, 'giu'),
+   (m, pre, prep, w, rest) => `${pre}${prep} ${HOUR_WORDS[w.toLowerCase()]}${rest}`) + ' ';
+  const tokens = [];
+  let date = null, weekdayToday = false, tm = null, exactMin = null, offset = null, priority = 'normal', repeat = null, plannerId = null;
+  const find = re => { const m = re.exec(s); if (!m) return null; m.start = m.index + m[1].length; return m; };
+  const cut = (m, kind, label) => { s = s.slice(0, m.start) + ' ' + s.slice(m.index + m[0].length); if (kind) tokens.push({kind, label}); };
+  let m;
+  // priority: trailing "!" (same as the bot)
+  if (/\s*!\s*[.]?\s*$/.test(s)) { priority = 'high'; s = s.replace(/\s*!\s*[.]?\s*$/, ' '); tokens.push({kind: 'priority', label: 'важно'}); }
+  // #tag -> planner (личное / семья / работа / any planner name prefix)
+  m = /(^|\s)#([\p{L}\d_-]{2,30})/u.exec(s);
+  if (m && planners.length) {
+   const tag = m[2].toLowerCase();
+   const kindOf = {'личное': 'personal', 'лично': 'personal', 'семья': 'family', 'семье': 'family', 'работа': 'team', 'отдел': 'team'}[tag];
+   const p = planners.find(x => (x.name || '').toLowerCase().replace(/\s+/g, '').startsWith(tag)) || (kindOf && planners.find(x => x.kind === kindOf));
+   if (p) { plannerId = p.id; s = s.slice(0, m.index) + ' ' + s.slice(m.index + m[0].length); tokens.push({kind: 'planner', label: '#' + p.name}); }
+  }
+  // repeat: каждый день / по будням / каждую неделю / каждый месяц / ежедневно ...
+  for (const [re, rule, label] of [[rx('каждый\\s+день|ежедневно'), 'daily', 'каждый день'], [rx('по\\s+будням|каждый\\s+будний\\s+день|в\\s+будни'), 'weekdays', 'по будням'],
+   [rx('каждую\\s+неделю|еженедельно'), 'weekly', 'каждую неделю'], [rx('каждый\\s+месяц|ежемесячно'), 'monthly', 'каждый месяц']]) {
+   if ((m = find(re))) { repeat = rule; cut(m, 'repeat', label); break; }
+  }
+  // 1. reminder offset
+  if ((m = find(rx(`(?:напомни(?:ть)?\\s+)?за\\s+(?:${NUM}\\s*)?(минут[уы]?|мин|часа|часов|час|ч|дня|дней|день|сутки)(?![\\p{L}\\d_])(?:\\s+до)?`)))) {
+   offset = Math.round(num(m[2]) * unitMin(m[3])); cut(m, 'remind', `напомнить за ${offset} мин`);
+  }
+  if (offset === null && (m = find(rx('(?:напомни(?:ть)?\\s+)?за\\s+полчаса')))) { offset = 30; cut(m, 'remind', 'напомнить за 30 мин'); }
+  // 2. relative
+  if ((m = find(rx('через\\s+полчаса')))) { exactMin = 30; cut(m); }
+  else if ((m = find(rx(`через\\s+(?:${NUM}\\s*)?(минут[уы]?|мин|часа|часов|час|ч|дня|дней|день|недел[юиь]|месяц[аев]*)`)))) {
+   const mins = num(m[2]) * unitMin(m[3]);
+   if (mins < 1440) exactMin = mins; else date = addDays(P.date, Math.round(mins / 1440));
+   cut(m);
+  }
+  // 3. day words
+  for (const [w, d] of [['послезавтра', 2], ['завтра', 1], ['сегодня', 0]]) {
+   if ((m = find(rx(`(?:на\\s+)?${w}`)))) { date = addDays(P.date, d); cut(m); break; }
+  }
+  // 4. weekdays
+  if (date === null) for (const [pat, wd] of WEEKDAYS) {
+   const short = pat.split('|').pop().length === 2;
+   const prefix = short ? '(?:в|во|к|до|на)\\s+' : '(?:(?:в|во|к|до|на)\\s+)?';
+   if ((m = find(rx(`${prefix}(?:(?:эт[уаот]|следующ[\\p{L}]*|ближайш[\\p{L}]*)\\s+)?(?:${pat})[\\p{L}]*`)))) {
+    const ahead = (wd - P.weekday + 7) % 7; weekdayToday = ahead === 0; date = addDays(P.date, ahead); cut(m); break;
+   }
+  }
+  // 5. time with minutes
+  const reT = new RegExp(`(^|[^\\p{L}\\d_])((?:(?:в|во|к|до|на)\\s+)?([01]?\\d|2[0-3])[:.]([0-5]\\d))(?![\\p{L}\\d_])(?:\\s+(утра|дня|вечера|ночи))?`, 'giu');
+  while ((m = reT.exec(s))) {
+   if (m[2].includes(':') || /^\s*(в|во|к|до|на)\s/i.test(m[2])) { m.start = m.index + m[1].length; tm = mkTime(+m[3], +m[4], m[5], true); cut(m); break; }
+  }
+  // 6. numeric date 15.10 / 15.10.2026
+  if (date === null && (m = find(rx('(?:(?:на|к|до)\\s+)?(\\d{1,2})[./](\\d{1,2})(?:[./](\\d{2,4}))?')))) {
+   const d = +m[2], mo = +m[3];
+   if (mo >= 1 && mo <= 12 && d >= 1 && d <= 31) {
+    let y = m[4] ? +m[4] : +P.date.slice(0, 4); if (y < 100) y += 2000;
+    let cand = `${y}-${pad(mo)}-${pad(d)}`;
+    if (validDate(cand)) { if (!m[4] && cand < P.date) cand = `${y + 1}-${pad(mo)}-${pad(d)}`; date = cand; cut(m); }
+   }
+  }
+  // 7. "15 октября"
+  if (date === null && (m = find(rx(`(?:(?:на|к|до)\\s+)?(\\d{1,2})\\s+${MONTH_RE}(?:\\s+(\\d{4}))?(?:\\s*г(?:ода|\\.)?)?`)))) {
+   const mo = MONTH_KEYS.findIndex(k => m[3].toLowerCase().startsWith(k)) + 1;
+   let y = m[4] ? +m[4] : +P.date.slice(0, 4);
+   let cand = `${y}-${pad(mo)}-${pad(+m[2])}`;
+   if (validDate(cand)) { if (!m[4] && cand < P.date) cand = `${y + 1}-${pad(mo)}-${pad(+m[2])}`; date = cand; cut(m); }
+  }
+  // 8a. "в 9 часов", "на 12 часов дня"
+  if (tm === null && exactMin === null && (m = find(rx('(?:(?:в|во|к|до|на)\\s+)?([01]?\\d|2[0-3])\\s*(?:ч|час(?:а|ов)?)(?![\\p{L}\\d_])(?:\\s+(?:в\\s+)?(утра|дня|вечера|ночи))?')))) {
+   tm = mkTime(+m[2], 0, m[3], !!m[3]); cut(m);
+  }
+  // 8. hour only
+  if (tm === null && exactMin === null) {
+   if ((m = find(rx('(?:в|во|к|до)\\s+([01]?\\d|2[0-3])(?:\\s*(?:ч|час[аов]*)(?![\\p{L}\\d_]))?(?:\\s+(утра|дня|вечера|ночи))?')))) { tm = mkTime(+m[2], 0, m[3], false); cut(m); }
+   else if ((m = find(rx('([01]?\\d|2[0-3])\\s+(утра|дня|вечера|ночи)')))) { tm = mkTime(+m[2], 0, m[3], true); cut(m); }
+  }
+  // 9. parts of day
+  if (tm === null && exactMin === null) for (const [pat, h] of [['в\\s+полдень', 12], ['в\\s+полночь', 23], ['утром', 9], ['дн[её]м', 13], ['вечером', 19], ['ночью', 23]]) {
+   if ((m = find(rx(pat)))) { tm = [h, pat.endsWith('полночь') ? 59 : 0]; cut(m); break; }
+  }
+  // compose (identical to parse_task)
+  let time = null;
+  if (exactMin !== null) {
+   const t = partsInTZ(now + exactMin * 60000);
+   if (date === null) date = t.date;
+   time = `${pad(t.hour)}:${pad(t.minute)}`;
+  } else if (tm !== null) {
+   time = `${pad(tm[0])}:${pad(tm[1])}`;
+   const nowHM = `${pad(P.hour)}:${pad(P.minute)}`;
+   if (date === null) date = time <= nowHM ? addDays(P.date, 1) : P.date;
+   else if (weekdayToday && date === P.date && time <= nowHM) date = addDays(date, 7);
+  }
+  if (repeat && !date) date = P.date;  // "каждый день зарядка" starts today (as in nlp_parser)
+  if (date) tokens.unshift({kind: 'date', label: human(date, now) + (time ? ' ' + time : '')});
+  let title = s.replace(/\s+/g, ' ').trim().replace(FILLERS, '').trim().replace(/^(?:что(?:бы)?|про)\s+/iu, '')
+   .replace(/\s+([,.!?])/g, '$1').replace(/^[\s,.;:\-—]+|[\s,.;:\-—]+$/g, '');
+  title = title ? title[0].toUpperCase() + title.slice(1) : '';
+  return {title, date, time, remind: offset, priority, repeat, plannerId, tokens};
+ }
+ function validDate(s) { const [y, m, d] = s.split('-').map(Number); const t = new Date(Date.UTC(y, m - 1, d)); return t.getUTCMonth() === m - 1 && t.getUTCDate() === d; }
+
+ // ---------- plan sections ----------
+ function sections(tasks, now = Date.now()) {
+  const t = today(now), tm = addDays(t, 1);
+  const open = tasks.filter(x => !x.deleted && x.status === 'open' && !x.parent_id);
+  const byTime = (a, b) => ((a.date || '9') + (a.time || '99')).localeCompare((b.date || '9') + (b.time || '99')) || (a.priority === 'high' ? -1 : 0) - (b.priority === 'high' ? -1 : 0) || a.created_at - b.created_at;
+  const out = {overdue: [], today: [], tomorrow: [], later: [], nodate: [], doneToday: []};
+  for (const x of open) {
+   if (!x.date) out.nodate.push(x);
+   else if (x.date < t) out.overdue.push(x);
+   else if (x.date === t) out.today.push(x);
+   else if (x.date === tm) out.tomorrow.push(x);
+   else out.later.push(x);
+  }
+  out.doneToday = tasks.filter(x => !x.deleted && x.status === 'done' && !x.parent_id && x.done_at && partsInTZ(x.done_at).date === t);
+  for (const k in out) out[k].sort(byTime);
+  return out;
+ }
+
+ // ---------- game (same rules as game.py) ----------
+ const LEVEL_TITLES = ['Новичок', 'Ученик планов', 'Деловой', 'Организатор', 'Мастер дня', 'Повелитель недели', 'Хозяин месяца', 'Легенда календаря'];
+ const levelStart = n => 50 * (n - 1) * n;  // L1 0, L2 100, L3 300, L4 600, L5 1000 ...
+ const ACHIEVEMENTS = [
+  ['first', 'Первая галочка', 'Закрыть первую задачу'], ['streak3', 'Разгон', '3 дня подряд'], ['streak7', 'Неделя огня', '7 дней подряд'],
+  ['streak30', 'Железная воля', '30 дней подряд'], ['ten_day', 'Десятка', '10 задач за день'], ['early', 'Ранняя пташка', 'Задача закрыта до 9:00'],
+  ['clean5', 'Чистюля', '5 чистых дней: всё сделано'], ['team', 'Командный игрок', 'Закрыть дело семьи или отдела'], ['hundred', 'Сотня', '100 задач'],
+  ['painter', 'Художник', 'Закрасить 20 дней месяца']];
+ function game(tasks, uid, planners = [], now = Date.now()) {
+  const groupIds = new Set(planners.filter(p => p.kind !== 'personal').map(p => p.id));
+  const mine = tasks.filter(x => !x.deleted && x.status === 'done' && x.done_at && (x.done_by === uid || (x.done_by == null && x.created_by === uid)));
+  const perDay = {}, planned = {}, plannedDone = {};
+  let xp = 0, early = false, team = false;
+  for (const x of tasks) if (!x.deleted && x.date && !x.parent_id && (x.created_by === uid || x.assignee_id === uid || !groupIds.has(x.planner_id))) {
+   planned[x.date] = (planned[x.date] || 0) + 1; if (x.status === 'done') plannedDone[x.date] = (plannedDone[x.date] || 0) + 1;
+  }
+  for (const x of mine) {
+   const p = partsInTZ(x.done_at);
+   perDay[p.date] = (perDay[p.date] || 0) + 1;
+   xp += 10 + (x.date && p.date <= x.date ? 5 : 0) + (x.priority === 'high' ? 5 : 0) + (x.parent_id ? -5 : 0);
+   if (p.hour < 9) early = true;
+   if (groupIds.has(x.planner_id)) team = true;
+  }
+  // streaks over days with at least one closed task; streak bonus = +2 XP per streak day (max +20) on each day
+  const days = Object.keys(perDay).sort();
+  let best = 0, run = 0, prev = null;
+  for (const d of days) { run = prev && addDays(prev, 1) === d ? run + 1 : 1; best = Math.max(best, run); xp += Math.min(run * 2, 20) - 2; prev = d; }
+  const t = today(now);
+  let streak = 0; for (let d = perDay[t] ? t : addDays(t, -1); perDay[d]; d = addDays(d, -1)) streak++;
+  const clean = Object.keys(planned).filter(d => d <= t && planned[d] > 0 && plannedDone[d] === planned[d]);
+  const month = t.slice(0, 7);
+  const painted = days.filter(d => d.startsWith(month)).length;
+  let level = 1; while (xp >= levelStart(level + 1)) level++;
+  const got = {first: mine.length >= 1, streak3: best >= 3, streak7: best >= 7, streak30: best >= 30,
+   ten_day: Object.values(perDay).some(n => n >= 10), early, clean5: clean.length >= 5, team, hundred: mine.length >= 100, painter: painted >= 20};
+  return {xp, level, title: LEVEL_TITLES[Math.min(level, LEVEL_TITLES.length) - 1], levelFrom: levelStart(level), levelTo: levelStart(level + 1),
+   streak, best, done: mine.length, todayDone: perDay[t] || 0, perDay, clean: new Set(clean), painted,
+   achievements: ACHIEVEMENTS.map(([id, title, desc]) => ({id, title, desc, got: !!got[id]}))};
+ }
+ function xpFor(task, todayKey) { return 10 + (task.date && todayKey <= task.date ? 5 : 0) + (task.priority === 'high' ? 5 : 0) + (task.parent_id ? -5 : 0); }
+
+ return {TZ, pad, partsInTZ, today, addDays, weekdayOf, human, uuid, parse, sections, game, xpFor, levelStart,
+  MONTHS, MONTHS_GEN, WD, WD_FULL, ACHIEVEMENTS};
+})();
+
+/* Local-first storage. Every scope (account) has its own IndexedDB database, so switching accounts never
+   mixes or deletes another account's data. A local edit and its outgoing operation are written in ONE
+   transaction: closing the app between them is impossible. Fallbacks: localStorage (one atomic setItem),
+   then memory (the UI warns that data lives only in this window). */
+const Store = (() => {
+ 'use strict';
+ let mode = 'memory', db = null, scope = null, ls = null;
+ const mem = {tasks: new Map(), outbox: [], meta: {}};
+ let seqLocal = 0;
+
+ function idb(name) {
+  return new Promise((res, rej) => {
+   if (!window.indexedDB) return rej(new Error('no idb'));
+   const r = indexedDB.open(name, 1);
+   r.onupgradeneeded = () => {
+    const d = r.result;
+    d.createObjectStore('tasks', {keyPath: 'id'});
+    d.createObjectStore('outbox', {keyPath: 'n', autoIncrement: true});
+    d.createObjectStore('meta');
+   };
+   r.onsuccess = () => res(r.result);
+   r.onerror = () => rej(r.error);
+   r.onblocked = () => rej(new Error('blocked'));
+  });
+ }
+ const done = tx => new Promise((res, rej) => { tx.oncomplete = () => res(); tx.onerror = tx.onabort = () => rej(tx.error || new Error('tx')); });
+ const req = r => new Promise((res, rej) => { r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); });
+
+ async function open(scopeKey) {
+  scope = String(scopeKey).replace(/[^-\w]/g, '_');
+  mem.tasks.clear(); mem.outbox = []; mem.meta = {};
+  try { db = await idb('den5-' + scope); mode = 'idb'; return mode; } catch (e) { db = null; }
+  try {
+   const k = 'den5-' + scope;
+   localStorage.setItem(k + '-probe', '1'); localStorage.removeItem(k + '-probe');
+   ls = k; const saved = JSON.parse(localStorage.getItem(k) || 'null');
+   if (saved) { for (const t of saved.tasks || []) mem.tasks.set(t.id, t); mem.outbox = saved.outbox || []; mem.meta = saved.meta || {}; }
+   seqLocal = mem.outbox.reduce((a, o) => Math.max(a, o.n), 0);
+   mode = 'ls'; return mode;
+  } catch (e) { mode = 'memory'; return mode; }
+ }
+ function flushLS() {
+  if (mode !== 'ls') return;
+  localStorage.setItem(ls, JSON.stringify({tasks: [...mem.tasks.values()], outbox: mem.outbox, meta: mem.meta}));
+ }
+
+ async function allTasks() {
+  if (mode === 'idb') return req(db.transaction('tasks').objectStore('tasks').getAll());
+  return [...mem.tasks.values()];
+ }
+ async function getMeta(key, dflt = null) {
+  if (mode === 'idb') { const v = await req(db.transaction('meta').objectStore('meta').get(key)); return v === undefined ? dflt : v; }
+  return key in mem.meta ? mem.meta[key] : dflt;
+ }
+ async function setMeta(obj) {
+  if (mode === 'idb') { const tx = db.transaction('meta', 'readwrite'); for (const k in obj) tx.objectStore('meta').put(obj[k], k); return done(tx); }
+  Object.assign(mem.meta, obj); flushLS();
+ }
+ /** Local edit: task(s) + operation(s), atomically. */
+ async function commit(tasks, ops) {
+  if (mode === 'idb') {
+   const tx = db.transaction(['tasks', 'outbox'], 'readwrite');
+   for (const t of tasks) tx.objectStore('tasks').put(t);
+   for (const o of ops) tx.objectStore('outbox').add(o);
+   return done(tx);
+  }
+  for (const t of tasks) mem.tasks.set(t.id, t);
+  for (const o of ops) mem.outbox.push(Object.assign({n: ++seqLocal}, o));
+  flushLS();
+ }
+ async function outbox() {
+  if (mode === 'idb') return req(db.transaction('outbox').objectStore('outbox').getAll());
+  return mem.outbox.slice();
+ }
+ /** Server answered: drop the sent operations, store server versions and the new cursor together. */
+ async function settle(sentNs, tasks, removeIds, meta) {
+  if (mode === 'idb') {
+   const tx = db.transaction(['tasks', 'outbox', 'meta'], 'readwrite');
+   for (const n of sentNs) tx.objectStore('outbox').delete(n);
+   for (const t of tasks) tx.objectStore('tasks').put(t);
+   for (const id of removeIds) tx.objectStore('tasks').delete(id);
+   for (const k in meta || {}) tx.objectStore('meta').put(meta[k], k);
+   return done(tx);
+  }
+  const s = new Set(sentNs); mem.outbox = mem.outbox.filter(o => !s.has(o.n));
+  for (const t of tasks) mem.tasks.set(t.id, t);
+  for (const id of removeIds) mem.tasks.delete(id);
+  Object.assign(mem.meta, meta || {}); flushLS();
+ }
+ return {open, allTasks, getMeta, setMeta, commit, outbox, settle, get mode() { return mode; }, get scope() { return scope; }};
+})();
+
+/* Background sync: pushes the persistent outbox, pulls changes after the server cursor.
+   Runs after each local change, on start, on return to the app, when the network comes back, on a timer
+   (faster while the user is active) and on demand. Failures back off exponentially with jitter. */
+const Sync = (() => {
+ 'use strict';
+ const PROTOCOL = 2;
+ let api = null, token = null, onStatus = () => {}, onChanged = () => {}, onAuth = () => {};
+ let running = false, again = false, fails = 0, timer = null, lastActive = Date.now(), state = 'local', blocked = false;
+
+ function config(o) { ({api, token} = Object.assign({api, token}, o)); if (o.onStatus) onStatus = o.onStatus; if (o.onChanged) onChanged = o.onChanged; if (o.onAuth) onAuth = o.onAuth; blocked = false; }
+ async function call(path, opts = {}) {
+  const ctl = new AbortController(); const to = setTimeout(() => ctl.abort(), 20000);
+  try {
+   const r = await fetch(api + path, Object.assign({}, opts, {signal: ctl.signal, cache: 'no-store',
+    headers: Object.assign({'Content-Type': 'application/json'}, token ? {Authorization: 'Bearer ' + token} : {}, opts.headers || {})}));
+   if (r.status === 401) { const e = new Error('auth'); e.auth = true; throw e; }
+   if (!r.ok) { const e = new Error((await r.text().catch(() => '')).slice(0, 200) || 'HTTP ' + r.status); e.status = r.status; throw e; }
+   return r.json();
+  } finally { clearTimeout(to); }
+ }
+
+ /** Merge raw queued operations into one operation per task (one request, no self-conflicts). */
+ function coalesce(raw) {
+  const by = new Map();
+  for (const o of raw) {
+   const cur = by.get(o.id);
+   if (!cur) { by.set(o.id, {ns: [o.n], ids: [o.op_id], op: JSON.parse(JSON.stringify(o.op))}); continue; }
+   cur.ns.push(o.n); cur.ids.push(o.op_id);
+   const a = cur.op, b = o.op;
+   if (b.type === 'update' && (a.type === 'create' || a.type === 'update')) Object.assign(a.fields, b.fields);
+   else if (b.type === 'delete' && a.type === 'create') { a.type = 'create'; a.fields.__drop = true; }
+   else cur.op = Object.assign({}, b, {base_rev: a.base_rev ?? b.base_rev, fields: Object.assign({}, a.fields || {}, b.fields || {})});
+  }
+  const out = [];
+  for (const [id, c] of by) {
+   const op = c.op;
+   if (op.fields && op.fields.__drop) { out.push({ns: c.ns, op: null, id}); continue; }  // created and deleted offline
+   op.op_id = c.ids.length === 1 ? c.ids[0] : 'm' + hash(c.ids.join('.'));
+   if (op.type === 'delete' || op.type === 'restore') delete op.fields;
+   out.push({ns: c.ns, op, id});
+  }
+  return out;
+ }
+ function hash(s) { let h = 2166136261; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return (h >>> 0).toString(36) + s.length.toString(36); }
+
+ function setState(s, extra) { state = s; onStatus(Object.assign({state: s}, extra || {})); }
+
+ async function run() {
+  if (!api || !token || blocked) { const n = (await Store.outbox()).length; setState('local', {pending: n}); return; }
+  if (running) { again = true; return; }
+  running = true;
+  try {
+   do {
+    again = false;
+    const raw = await Store.outbox();
+    if (raw.length) {
+     setState('sending', {pending: raw.length});
+     const groups = coalesce(raw);
+     const ops = groups.filter(g => g.op).map(g => g.op);
+     const res = ops.length ? await call('api/sync', {method: 'POST', body: JSON.stringify({protocol: PROTOCOL, ops})}) : {results: []};
+     const byOp = new Map(res.results.map(r => [r.op_id, r]));
+     const put = [], drop = [], sent = [], notes = [];
+     const stillPending = new Set((await Store.outbox()).filter(o => !groups.some(g => g.ns.includes(o.n))).map(o => o.id));
+     for (const g of groups) {
+      sent.push(...g.ns);
+      if (!g.op) { drop.push(g.id); continue; }
+      const r = byOp.get(g.op.op_id);
+      if (!r) continue;
+      if (r.ok && r.task && !stillPending.has(g.id)) put.push(r.task);
+      if (r.ok && r.conflicts) notes.push('Есть конфликт правок — откройте задачу');
+      if (!r.ok) notes.push(r.error === 'forbidden' ? 'Нет доступа к ежедневнику' : `Сервер отклонил изменение (${r.field || r.error})`);
+     }
+     await Store.settle(sent, put, drop, {});
+     if (notes.length) onStatus({state: 'notice', text: notes[0]});
+    }
+    await pull();
+   } while (again);
+   fails = 0;
+   setState('synced', {at: Date.now()});
+  } catch (e) {
+   if (e.auth) { blocked = true; setState('auth'); onAuth(); }
+   else { fails++; setState(navigator.onLine === false ? 'offline' : 'error', {pending: (await Store.outbox()).length, error: e.message}); }
+  } finally { running = false; schedule(); }
+ }
+
+ async function pull() {
+  const since = await Store.getMeta('cursor', 0);
+  const known = await Store.getMeta('known', []);
+  const data = await call(`api/sync?since=${since}&known=${known.join(',')}`);
+  if (data.protocol !== PROTOCOL) throw new Error('Обновите приложение');
+  const pending = new Set((await Store.outbox()).map(o => o.id));
+  const ids = new Set(data.planners.map(p => p.id));
+  const local = await Store.allTasks();
+  const remove = local.filter(t => !ids.has(t.planner_id) && !pending.has(t.id)).map(t => t.id);  // left a group
+  const put = data.tasks.filter(t => !pending.has(t.id));
+  await Store.settle([], put, remove, {cursor: data.seq, known: [...ids], planners: data.planners});
+  if (put.length || remove.length || JSON.stringify(known) !== JSON.stringify([...ids])) onChanged(data.planners);
+ }
+
+ function schedule() {
+  clearTimeout(timer);
+  if (blocked || !token) return;
+  let wait;
+  if (fails) wait = Math.min(60000, 2000 * 2 ** (fails - 1)) * (0.8 + Math.random() * 0.4);
+  else wait = document.hidden ? 120000 : (Date.now() - lastActive < 120000 ? 15000 : 45000);
+  timer = setTimeout(run, wait);
+ }
+ function poke() { lastActive = Date.now(); clearTimeout(timer); timer = setTimeout(run, 250); }
+ addEventListener('online', () => { fails = 0; poke(); });
+ document.addEventListener('visibilitychange', () => { if (!document.hidden) poke(); });
+ addEventListener('focus', poke);
+
+ return {config, call, run, poke, coalesce, get state() { return state; }};
+})();
+
+/* Environment adapter: Telegram Mini App, MAX mini app, browser/PWA, local file.
+   Decides how the user gets a device key, applies the messenger theme, back button, haptics. */
+const Platform = (() => {
+ 'use strict';
+ const CFG = JSON.parse(document.getElementById('cfg').textContent);
+ const tg = window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initData ? window.Telegram.WebApp : null;
+ const mx = !tg && window.WebApp && window.WebApp.initData ? window.WebApp : null;
+ const kind = tg ? 'telegram' : mx ? 'max' : CFG.mode === 'file' ? 'file' : 'web';
+ const api = CFG.mode === 'file' ? (CFG.api.replace(/\/+$/, '') + '/') : (window.DEN_API_BASE || new URL('/', location.href).toString());
+ const KEY = 'den5-device' + (kind === 'file' ? '-' + (CFG.user_id || 'file') : '');
+
+ function getToken() { try { return localStorage.getItem(KEY); } catch (e) { return null; } }
+ function setToken(t) { try { t ? localStorage.setItem(KEY, t) : localStorage.removeItem(KEY); } catch (e) {} }
+
+ /** Returns a device key or null (the UI then offers login / pairing code / offline use). */
+ async function auth(force) {
+  let t = force ? null : getToken();
+  const h = new URLSearchParams(location.hash.slice(1));
+  if (h.get('device')) {  // from /auth/telegram (Login Widget); the fragment never reaches a server
+   t = h.get('device'); setToken(t); history.replaceState(null, '', location.pathname + location.search);
+  }
+  if (t) return t;
+  if (kind === 'telegram' || kind === 'max') {
+   const r = await fetch(api + 'api/auth/' + (kind === 'telegram' ? 'telegram' : 'max'), {method: 'POST',
+    headers: {'Content-Type': 'application/json'}, body: JSON.stringify({init_data: (tg || mx).initData})});
+   if (!r.ok) throw new Error('Вход не подтверждён (' + r.status + ')');
+   t = (await r.json()).token; setToken(t); return t;
+  }
+  return null;
+ }
+ function pairCodeFromLink() { const h = new URLSearchParams(location.hash.slice(1)); return h.get('pair'); }
+
+ function theme() {
+  const root = document.documentElement;
+  if (tg) {
+   const p = tg.themeParams || {};
+   root.dataset.theme = tg.colorScheme === 'dark' ? 'dark' : 'light';
+   const set = (v, c) => c && root.style.setProperty(v, c);
+   set('--bg', p.bg_color); set('--surface', p.secondary_bg_color && p.bg_color !== p.secondary_bg_color ? p.section_bg_color || p.secondary_bg_color : null);
+   set('--text', p.text_color); set('--muted', p.hint_color); set('--accent', p.button_color); set('--accent-ink', p.button_text_color);
+   try { tg.setHeaderColor && tg.setHeaderColor(p.bg_color || 'bg_color'); } catch (e) {}
+  }
+ }
+ function ready() {
+  theme();
+  if (tg) { try { tg.ready(); tg.expand(); tg.onEvent && tg.onEvent('themeChanged', theme); } catch (e) {} }
+  if (mx) { try { mx.ready && mx.ready(); } catch (e) {} }
+  if (kind === 'web' && 'serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('/sw.js').catch(() => {});
+ }
+ const back = {
+  show(fn) { const b = (tg || mx || {}).BackButton; if (!b) return; try { b._fn && b.offClick(b._fn); b._fn = fn; b.onClick(fn); b.show(); } catch (e) {} },
+  hide() { const b = (tg || mx || {}).BackButton; if (!b) return; try { b._fn && b.offClick(b._fn); b._fn = null; b.hide(); } catch (e) {} },
+ };
+ function haptic(kind = 'light') {
+  try {
+   if (tg && tg.HapticFeedback) kind === 'success' ? tg.HapticFeedback.notificationOccurred('success') : tg.HapticFeedback.impactOccurred(kind);
+   else if (mx && mx.HapticFeedback) kind === 'success' ? mx.HapticFeedback.notificationOccurred('success') : mx.HapticFeedback.impactOccurred(kind);
+   else if (navigator.vibrate) navigator.vibrate(kind === 'success' ? [12, 40, 12] : 8);
+  } catch (e) {}
+ }
+ function openLink(url) {
+  try { if (tg && tg.openLink) return tg.openLink(url); if (mx && mx.openLink) return mx.openLink(url); } catch (e) {}
+  window.open(url, '_blank', 'noopener');
+ }
+ function download(url, name) {
+  if (mx && mx.downloadFile) { try { return mx.downloadFile(url, name); } catch (e) {} }
+  if (tg && tg.openLink) return tg.openLink(url);
+  const a = document.createElement('a'); a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove();
+ }
+ const NAMES = {telegram: 'Telegram', max: 'MAX', web: 'Браузер', file: 'Файл на устройстве'};
+ return {CFG, kind, api, name: NAMES[kind], auth, getToken, setToken, pairCodeFromLink, ready, back, haptic, openLink, download,
+  canPushToChat: kind === 'telegram'};
+})();
+
+/* UI: three tabs (План · Календарь · Профиль), planner chips, smart input, bottom sheet, game.
+   All user data is put into the DOM with textContent/attributes via h() — never as HTML. */
+(() => {
+ 'use strict';
+ const $ = s => document.querySelector(s);
+ const S = {me: null, uid: null, planners: [], tasks: new Map(), filter: 'all', tab: 'plan', calMonth: Core.today().slice(0, 7),
+  calDay: Core.today(), events: {}, sync: {state: 'local'}, draft: null, gameBefore: null, offlineOnly: false, sheet: null};
+
+ // ---------- tiny DOM helper ----------
+ function h(tag, attrs, ...kids) {
+  const el = document.createElement(tag);
+  for (const k in attrs || {}) {
+   const v = attrs[k];
+   if (v == null || v === false) continue;
+   if (k === 'class') el.className = v;
+   else if (k.startsWith('on')) el.addEventListener(k.slice(2), v);
+   else if (k === 'text') el.textContent = v;
+   else el.setAttribute(k, v === true ? '' : v);
+  }
+  for (const c of kids.flat()) if (c != null && c !== false) el.append(c.nodeType ? c : document.createTextNode(String(c)));
+  return el;
+ }
+ const ICONS = {
+  plan: '<path d="M4 6h16M4 12h16M4 18h10"/>', cal: '<rect x="3.5" y="5" width="17" height="15" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4"/>',
+  me: '<circle cx="12" cy="8.5" r="3.5"/><path d="M5 20c.8-3.6 3.6-5.6 7-5.6s6.2 2 7 5.6"/>', send: '<path d="M12 19V5M5 12l7-7 7 7"/>',
+  left: '<path d="M15 5l-7 7 7 7"/>', right: '<path d="M9 5l7 7-7 7"/>', check: '<path d="M5 12.5l4.5 4.5L19 7.5"/>',
+  repeat: '<path d="M4 9a7 7 0 0 1 12-3l2 2M20 15a7 7 0 0 1-12 3l-2-2M18 4v4h-4M6 20v-4h4"/>', more: '<circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/>'};
+ function icon(name, cls = 'i') {
+  const s = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  s.setAttribute('viewBox', '0 0 24 24'); s.setAttribute('class', cls); s.setAttribute('aria-hidden', 'true');
+  s.innerHTML = ICONS[name];  // static markup from this file only
+  return s;
+ }
+ function toast(text, action, ms = 4500) {
+  const old = $('.toast'); if (old) old.remove();
+  const t = h('div', {class: 'toast', role: 'status'}, h('span', {text}), action ? h('button', {onclick: () => { t.remove(); action.fn(); }, text: action.label}) : null);
+  document.body.append(t); setTimeout(() => t.remove(), ms);
+ }
+
+ // ---------- data helpers ----------
+ const tasksArr = () => [...S.tasks.values()];
+ const visible = () => tasksArr().filter(t => !t.deleted && (S.filter === 'all' || t.planner_id === S.filter));
+ const planner = id => S.planners.find(p => p.id === id);
+ const personal = () => S.planners.find(p => p.kind === 'personal') || {id: -1, kind: 'personal', name: 'Личное'};
+ const memberName = (pid, uid) => { const p = planner(pid); const m = p && p.members && p.members.find(x => x.id === uid); return m ? m.name : ''; };
+ async function reload() { S.tasks = new Map((await Store.allTasks()).map(t => [t.id, t])); S.planners = await Store.getMeta('planners', S.planners) || S.planners; render(); }
+
+ /** Local edit: optimistic task + queued operation in one local transaction, then background push. */
+ async function edit(task, type, fields) {
+  const before = S.tasks.get(task.id);
+  const t = Object.assign({}, before || task);
+  if (fields) for (const k in fields) {
+   if (k === 'due') { t.date = fields.due ? fields.due.date : null; t.time = fields.due ? fields.due.time : null; }
+   else t[k] = fields[k];
+  }
+  if (type === 'delete') t.deleted = true;
+  if (type === 'restore') t.deleted = false;
+  if (fields && fields.status === 'done' && (!before || before.status !== 'done')) { t.done_at = Date.now(); t.done_by = S.uid; }
+  if (fields && fields.status && fields.status !== 'done') { t.done_at = null; t.done_by = null; }
+  const op = {op_id: Core.uuid(), type, id: t.id};
+  if (type === 'create') { op.planner_id = t.planner_id; op.fields = fields; }
+  else if (type === 'update') { op.base_rev = (before && before.rev) || 0; op.fields = fields; }
+  const extra = [];
+  if (fields && fields.status === 'done' && t.repeat && t.date && (!before || before.status !== 'done')) extra.push(nextOccurrence(t));
+  try {
+   await Store.commit([t, ...extra.map(x => x.task)], [{op_id: op.op_id, id: t.id, op}, ...extra.map(x => ({op_id: x.op.op_id, id: x.task.id, op: x.op}))]);
+  } catch (e) { toast('Не удалось сохранить на устройстве: ' + e.message); return null; }
+  S.tasks.set(t.id, t); for (const x of extra) S.tasks.set(x.task.id, x.task);
+  Sync.poke(); render();
+  return t;
+ }
+ function nextOccurrence(t) {  // same rule and id as the server (sync._next_occurrence): no duplicates
+  const d = t.date, r = t.repeat;
+  let n = r === 'daily' ? Core.addDays(d, 1) : r === 'weekly' ? Core.addDays(d, 7) : null;
+  if (r === 'weekdays') { n = Core.addDays(d, 1); while (Core.weekdayOf(n) >= 5) n = Core.addDays(n, 1); }
+  if (r === 'monthly') { const [y, m, dd] = d.split('-').map(Number); const ny = m === 12 ? y + 1 : y, nm = m === 12 ? 1 : m + 1;
+   const last = new Date(Date.UTC(ny, nm, 0)).getUTCDate(); n = `${ny}-${Core.pad(nm)}-${Core.pad(Math.min(dd, last))}`; }
+  const id = `${t.id.slice(0, 140)}-r${n.replace(/-/g, '')}`;
+  const task = {id, planner_id: t.planner_id, title: t.title, notes: t.notes || '', date: n, time: t.time, priority: t.priority, status: 'open',
+   deleted: false, assignee_id: t.assignee_id, parent_id: null, repeat: r, postponed: 0, created_at: Date.now(), created_by: t.created_by, rev: 0, conflicts: []};
+  const fields = {title: task.title, notes: task.notes, due: {date: n, time: t.time}, priority: task.priority, repeat: r};
+  if (t.assignee_id != null) fields.assignee_id = t.assignee_id;
+  return {task, op: {op_id: Core.uuid(), type: 'create', id, planner_id: t.planner_id, fields}};
+ }
+
+ // ---------- actions ----------
+ async function addFromInput() {
+  const inp = $('#compose'); const text = inp.value.trim(); if (!text) return;
+  const p = Core.parse(text, Date.now(), S.planners);
+  if (S.draft && S.draft.removed) for (const k of S.draft.removed) { if (k === 'date') { p.date = null; p.time = null; } else if (k === 'priority') p.priority = 'normal'; else if (k === 'repeat') p.repeat = null; else if (k === 'planner') p.plannerId = null; }
+  const title = p.title || text;
+  const pid = p.plannerId || (S.filter !== 'all' ? S.filter : personal().id);
+  const fields = {title, priority: p.priority};
+  if (p.date) fields.due = {date: p.date, time: p.time};
+  if (p.repeat && p.date) fields.repeat = p.repeat;
+  const task = {id: Core.uuid(), planner_id: pid, title, notes: '', date: p.date, time: p.time, priority: p.priority, status: 'open', deleted: false,
+   assignee_id: null, parent_id: null, repeat: fields.repeat || null, postponed: 0, created_at: Date.now(), created_by: S.uid, rev: 0, conflicts: []};
+  inp.value = ''; S.draft = null; renderPreview();
+  await edit(task, 'create', fields);
+  Platform.haptic('light');
+  toast('Добавлено' + (p.date ? ' на ' + Core.human(p.date) + (p.time ? ' ' + p.time : '') : ''));
+ }
+ async function toggleDone(t, el) {
+  const done = t.status !== 'done';
+  const before = S.uid != null ? Core.game(tasksArr(), S.uid, S.planners) : null;
+  await edit(t, 'update', {status: done ? 'done' : 'open'});
+  if (done) {
+   Platform.haptic('success');
+   const after = Core.game(tasksArr(), S.uid, S.planners);
+   celebrate(el, after.xp - (before ? before.xp : 0));
+   if (before && after.level > before.level) setTimeout(() => toast(`Новый уровень ${after.level}: ${after.title}! 🎉`), 700);
+   const newAch = after.achievements.filter(a => a.got && before && !before.achievements.find(b => b.id === a.id).got);
+   if (newAch.length) setTimeout(() => toast('Достижение: ' + newAch[0].title + ' 🏆'), 1300);
+  }
+ }
+ async function postpone(t, days = 1) {
+  const base = t.date && t.date > Core.today() ? t.date : Core.today();
+  await edit(t, 'update', {due: {date: Core.addDays(base, days), time: t.time}});
+  toast('Перенесено на ' + Core.human(Core.addDays(base, days)));
+ }
+ async function remove(t) {
+  await edit(t, 'delete');
+  toast('Удалено', {label: 'Отменить', fn: () => edit(S.tasks.get(t.id), 'restore')});
+ }
+
+ // ---------- celebration ----------
+ function celebrate(el, xp) {
+  const r = el ? el.getBoundingClientRect() : {left: innerWidth / 2, top: innerHeight / 2, width: 0, height: 0};
+  const fx = h('div', {class: 'fx', 'aria-hidden': 'true'});
+  const cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+  const colors = ['var(--accent)', 'var(--ok)', 'var(--warn)', '#E58BFF', '#FFD166'];
+  for (let i = 0; i < 18; i++) {
+   const a = Math.random() * Math.PI * 2, d = 60 + Math.random() * 90;
+   const p = h('i'); p.style.left = cx + 'px'; p.style.top = cy + 'px'; p.style.background = colors[i % colors.length];
+   p.style.setProperty('--dx', Math.cos(a) * d + 'px'); p.style.setProperty('--dy', Math.sin(a) * d + 40 + 'px'); fx.append(p);
+  }
+  if (xp > 0) { const x = h('b', {class: 'xp', text: '+' + xp + ' XP'}); x.style.left = cx - 30 + 'px'; x.style.top = cy - 30 + 'px'; fx.append(x); }
+  document.body.append(fx); setTimeout(() => fx.remove(), 1200);
+ }
+
+ // ---------- render: shell ----------
+ function render() {
+  renderChips(); renderSync();
+  const view = $('#view'); view.replaceChildren();
+  const wide = matchMedia('(min-width:900px)').matches;
+  if (wide) { $('#side').replaceChildren(gameMini(), calendarView(true)); }
+  if (S.tab === 'plan' || (wide && S.tab === 'cal')) view.append(planView());
+  else if (S.tab === 'cal') view.append(calendarView(false));
+  else view.append(profileView());
+  for (const b of document.querySelectorAll('.tabs button, .side-nav button')) b.setAttribute('aria-current', b.dataset.tab === S.tab ? 'page' : 'false');
+ }
+ function renderChips() {
+  const c = $('#chips'); c.replaceChildren();
+  const all = [{id: 'all', name: 'Все'}, ...S.planners.map(p => ({id: p.id, name: p.kind === 'personal' ? 'Личное' : p.name}))];
+  for (const p of all) c.append(h('button', {class: 'chip', 'aria-pressed': String(S.filter === p.id), onclick: () => { S.filter = p.id; render(); }, text: p.name}));
+ }
+ const SYNC_TEXT = {local: 'На устройстве', sending: 'Отправляю', synced: 'Синхронизировано', offline: 'Нет сети, всё сохранено', error: 'Нет связи, сохранено здесь', auth: 'Нужно войти снова', memory: 'Только в этом окне!'};
+ function renderSync() {
+  const s = S.sync, b = $('#sync');
+  let text = SYNC_TEXT[s.state] || '';
+  if (s.state === 'sending') text = `Отправляю ${s.pending || ''}`.trim();
+  if ((s.state === 'local' || s.state === 'offline' || s.state === 'error') && s.pending) text += ` · ${s.pending}`;
+  if (Store.mode === 'memory') { b.dataset.state = 'memory'; text = SYNC_TEXT.memory; } else b.dataset.state = s.state;
+  b.lastChild.textContent = text;
+  b.setAttribute('aria-label', 'Синхронизация: ' + text);
+ }
+
+ // ---------- plan ----------
+ function taskRow(t) {
+  const isDone = t.status === 'done';
+  const row = h('div', {class: 'task' + (isDone ? ' done' : ''), 'data-id': t.id});
+  const chk = h('button', {class: 'check', 'aria-label': (isDone ? 'Вернуть: ' : 'Готово: ') + t.title, 'aria-pressed': String(isDone),
+   onclick: e => toggleDone(t, e.currentTarget)}, h('span', null, icon('check', '')));
+  const meta = h('span', {class: 'meta'});
+  const today = Core.today();
+  if (t.date && (t.date !== today || !t.time)) meta.append(h('span', {class: 'tag' + (t.date < today && !isDone ? ' late' : ''), text: Core.human(t.date)}));
+  if (t.time) meta.append(h('span', {class: 'tag time', text: t.time}));
+  if (t.priority === 'high') meta.append(h('span', {class: 'tag hi', text: 'важно'}));
+  if (t.postponed >= 2) meta.append(h('span', {class: 'tag late', text: 'перенос ×' + t.postponed}));
+  if (t.repeat) meta.append(h('span', {class: 'tag', title: 'повтор'}, icon('repeat', 'i'), ''));
+  const p = planner(t.planner_id);
+  if (S.filter === 'all' && p && p.kind !== 'personal') meta.append(h('span', {class: 'tag', text: p.name}));
+  if (t.assignee_id != null) meta.append(h('span', {class: 'tag', text: '→ ' + (memberName(t.planner_id, t.assignee_id) || 'участник')}));
+  const subs = tasksArr().filter(x => x.parent_id === t.id && !x.deleted);
+  if (subs.length) meta.append(h('span', {class: 'tag', text: `${subs.filter(x => x.status === 'done').length}/${subs.length}`}));
+  if (t.conflicts && t.conflicts.length) meta.append(h('span', {class: 'tag conf', text: 'конфликт'}));
+  if (t.rev === 0) meta.append(h('span', {class: 'tag pend', text: '· на устройстве'}));
+  const main = h('button', {class: 't-main', onclick: () => openSheet(t)}, h('span', {class: 't-title', text: t.title}), meta.childNodes.length ? meta : null);
+  row.append(chk, main);
+  if (!isDone && (!t.date || t.date <= today)) row.append(h('button', {class: 't-act', 'aria-label': 'Перенести на завтра: ' + t.title, onclick: () => postpone(t, 1), text: 'Завтра'}));
+  swipe(row, t);
+  return row;
+ }
+ function swipe(row, t) {  // → postpone to tomorrow, ← delete (with undo); explicit buttons stay available
+  let x0 = null, y0 = 0, dx = 0;
+  row.addEventListener('pointerdown', e => { if (e.pointerType === 'mouse') return; x0 = e.clientX; y0 = e.clientY; dx = 0; });
+  row.addEventListener('pointermove', e => {
+   if (x0 === null) return; dx = e.clientX - x0;
+   if (Math.abs(e.clientY - y0) > 24 && Math.abs(dx) < 24) { x0 = null; row.style.transform = ''; return; }
+   if (Math.abs(dx) > 10) row.style.transform = `translateX(${Math.max(-120, Math.min(120, dx))}px)`;
+  });
+  const end = () => { if (x0 === null) return; x0 = null; row.style.transform = ''; if (dx > 90) postpone(t, 1); else if (dx < -90) remove(t); };
+  row.addEventListener('pointerup', end); row.addEventListener('pointercancel', () => { x0 = null; row.style.transform = ''; });
+ }
+ function section(title, list, cls) {
+  if (!list.length) return null;
+  return h('section', null, h('h2', {class: 'sec-h' + (cls ? ' ' + cls : '')}, h('span', {text: title}), h('span', {text: String(list.length)})),
+   h('div', {class: 'card list'}, list.map(taskRow)));
+ }
+ function planView() {
+  const sec = Core.sections(visible());
+  const frag = h('div');
+  frag.append(h('h1', {class: 'title', text: S.filter === 'all' ? 'План' : (planner(S.filter) || {}).kind === 'personal' ? 'Личное' : (planner(S.filter) || {}).name}));
+  if (S.uid != null && !matchMedia('(min-width:900px)').matches) frag.append(gameStrip());  // wide: shown in the side column
+  const any = sec.overdue.length + sec.today.length + sec.tomorrow.length + sec.later.length + sec.nodate.length;
+  if (!any) frag.append(h('div', {class: 'card empty'}, h('b', {text: 'Свободно'}), 'Напишите задачу внизу: «завтра в 10 созвон» или «каждый день зарядка».'));
+  for (const s of [section('Просрочено', sec.overdue, 'warn'), section('Сегодня', sec.today), section('Завтра', sec.tomorrow),
+   section('Позже', sec.later), section('Без даты', sec.nodate)]) if (s) frag.append(s);
+  if (sec.doneToday.length) frag.append(h('section', null, h('details', {class: 'done-box'},
+   h('summary', {class: 'sec-h'}, h('span', {text: 'Выполнено сегодня'}), h('span', {text: String(sec.doneToday.length)})),
+   h('div', {class: 'card list'}, sec.doneToday.map(taskRow)))));
+  return frag;
+ }
+
+ // ---------- game ----------
+ function gameStrip() {
+  const g = Core.game(tasksArr(), S.uid, S.planners);
+  const pct = Math.round((g.xp - g.levelFrom) / (g.levelTo - g.levelFrom) * 100);
+  return h('button', {class: 'card row', style: 'margin-bottom:18px', onclick: () => { S.tab = 'me'; render(); }, 'aria-label': `Уровень ${g.level}, ${g.xp} очков, серия ${g.streak} дней`},
+   h('span', {class: 'badge-lvl', style: 'width:44px;height:44px;border-radius:14px;font-size:17px'}, String(g.level)),
+   h('span', {class: 'grow'}, h('b', {text: `${g.title} · ${g.streak ? '🔥 ' + g.streak + ' дн.' : 'начните серию'}`}),
+    h('div', {class: 'bar', style: 'margin-top:6px'}, h('i', {style: `width:${pct}%`}))),
+   h('small', {text: `сегодня ${g.todayDone}`}));
+ }
+ function gameMini() { return S.uid != null ? h('div', {style: 'margin-bottom:14px'}, gameStrip()) : h('div'); }
+ function gameCard() {
+  const g = Core.game(tasksArr(), S.uid, S.planners);
+  const pct = Math.round((g.xp - g.levelFrom) / (g.levelTo - g.levelFrom) * 100);
+  const daysInMonth = new Date(+Core.today().slice(0, 4), +Core.today().slice(5, 7), 0).getDate();
+  return h('section', null, h('h2', {class: 'sec-h', text: 'Игра «Закрась месяц»'}), h('div', {class: 'card game'},
+   h('div', {class: 'lvl'}, h('div', {class: 'badge-lvl'}, h('small', {text: 'ур.'}), String(g.level)),
+    h('div', {class: 'grow', style: 'flex:1'}, h('b', {text: g.title}), h('div', {class: 'muted', style: 'font-size:13px', text: `${g.xp} XP · до уровня ${g.level + 1}: ${g.levelTo - g.xp}`}),
+     h('div', {class: 'bar', style: 'margin-top:8px'}, h('i', {style: `width:${pct}%`})))),
+   h('div', {class: 'stats3'}, h('div', {class: 'stat'}, h('b', {text: (g.streak ? '🔥' : '') + g.streak}), h('small', {text: 'дней подряд'})),
+    h('div', {class: 'stat'}, h('b', {text: `${g.painted}/${daysInMonth}`}), h('small', {text: 'закрашено дней'})),
+    h('div', {class: 'stat'}, h('b', {text: String(g.done)}), h('small', {text: 'задач закрыто'}))),
+   h('p', {class: 'muted', style: 'margin:0;font-size:13px', text: 'Каждая закрытая задача красит день в календаре. Вовремя — +5 XP, важная — +5, серия дней даёт бонус. Чистый день (всё запланированное сделано) получает ⭐.'}),
+   h('div', {class: 'ach'}, g.achievements.map(a => h('div', {class: a.got ? 'got' : ''}, h('b', {text: (a.got ? '🏆 ' : '🔒 ') + a.title}), a.desc)))));
+ }
+
+ // ---------- calendar ----------
+ function calendarView(compact) {
+  const g = S.uid != null ? Core.game(tasksArr(), S.uid, S.planners) : {perDay: {}, clean: new Set()};
+  const [y, m] = S.calMonth.split('-').map(Number);
+  const first = `${S.calMonth}-01`, startWd = Core.weekdayOf(first), days = new Date(y, m, 0).getDate();
+  const vis = visible();
+  const openBy = {}; for (const t of vis) if (t.date && t.status === 'open' && !t.parent_id) openBy[t.date] = (openBy[t.date] || 0) + 1;
+  const grid = h('div', {class: 'grid7'}, Core.WD.map(w => h('div', {class: 'wd', text: w})));
+  for (let i = 0; i < startWd; i++) grid.append(h('div'));
+  const today = Core.today();
+  for (let d = 1; d <= days; d++) {
+   const key = `${S.calMonth}-${Core.pad(d)}`, n = g.perDay[key] || 0;
+   const cell = h('button', {class: `day${key === today ? ' today' : ''}${n ? ' p' + Math.min(n, 4) : ''}`, 'aria-pressed': String(key === S.calDay),
+    'aria-label': `${d} ${Core.MONTHS_GEN[m - 1]}: открыто ${openBy[key] || 0}, сделано ${n}`, onclick: () => { S.calDay = key; render(); }}, String(d));
+   if (openBy[key]) cell.append(h('span', {class: 'dots'}, Array.from({length: Math.min(openBy[key], 3)}, () => h('i'))));
+   if (g.clean.has(key)) cell.append(h('span', {class: 'star', text: '⭐'}));
+   grid.append(cell);
+  }
+  const shift = k => { const dd = new Date(y, m - 1 + k, 1); S.calMonth = `${dd.getFullYear()}-${Core.pad(dd.getMonth() + 1)}`; loadEvents(); render(); };
+  const head = h('div', {class: 'cal-head'}, h('button', {class: 'icon-btn', 'aria-label': 'Предыдущий месяц', onclick: () => shift(-1)}, icon('left')),
+   h('h2', {text: `${Core.MONTHS[m - 1]} ${y}`}), h('button', {class: 'icon-btn', 'aria-label': 'Следующий месяц', onclick: () => shift(1)}, icon('right')));
+  const dayTasks = vis.filter(t => t.date === S.calDay && !t.parent_id).sort((a, b) => (a.time || '99').localeCompare(b.time || '99'));
+  const evs = (S.events[S.calMonth] || []).filter(e => e.start.slice(0, 10) === S.calDay);
+  const agenda = h('section', {style: 'margin-top:16px'}, h('h2', {class: 'sec-h', text: Core.human(S.calDay)}),
+   (dayTasks.length || evs.length) ? h('div', {class: 'card list'}, evs.map(e => h('div', {class: 'event'}, h('b', {text: e.all_day ? 'весь день' : e.start.slice(11, 16) + '–' + e.end.slice(11, 16)}), h('span', {text: e.title}))), dayTasks.map(taskRow))
+    : h('div', {class: 'card empty', text: 'Дел нет'}));
+  const wrap = h('div', null, compact ? null : h('h1', {class: 'title', text: 'Календарь'}), head, grid, agenda);
+  return wrap;
+ }
+ async function loadEvents() {
+  if (S.offlineOnly || !Platform.getToken() || S.events[S.calMonth]) return;
+  const [y, m] = S.calMonth.split('-').map(Number);
+  const to = new Date(y, m, 1);
+  try {
+   const r = await Sync.call(`api/events?from=${S.calMonth}-01T00:00&to=${to.getFullYear()}-${Core.pad(to.getMonth() + 1)}-01T00:00`);
+   S.events[S.calMonth] = r.events; render();
+  } catch (e) {}
+ }
+
+ // ---------- bottom sheet ----------
+ function sheet(title, body, onClose) {
+  closeSheet();
+  const sc = h('div', {class: 'scrim', onclick: e => { if (e.target === sc) closeSheet(); }});
+  const sh = h('div', {class: 'sheet', role: 'dialog', 'aria-modal': 'true', 'aria-label': title}, h('div', {class: 'grip'}), h('h2', {text: title}), body);
+  sc.append(sh); document.body.append(sc);
+  S.sheet = {el: sc, onClose};
+  Platform.back.show(closeSheet);
+  sc.addEventListener('keydown', e => { if (e.key === 'Escape') closeSheet(); });
+  const f = sh.querySelector('input,select,textarea,button'); if (f) setTimeout(() => f.focus(), 30);
+ }
+ function closeSheet() {
+  if (!S.sheet) return;
+  const s = S.sheet; S.sheet = null; s.el.remove(); Platform.back.hide();
+  if (s.onClose) s.onClose();
+ }
+ function field(label, input) { return h('label', {class: 'field'}, label, input); }
+ function openSheet(t) {
+  t = S.tasks.get(t.id) || t;
+  const p = planner(t.planner_id);
+  const title = h('input', {value: t.title, maxlength: '500', 'aria-label': 'Название'});
+  const date = h('input', {type: 'date', value: t.date || ''});
+  const time = h('input', {type: 'time', value: t.time || ''});
+  const prio = h('select', null, [['normal', 'Обычный'], ['high', 'Важный'], ['low', 'Невысокий']].map(([v, l]) => h('option', {value: v, selected: t.priority === v}, l)));
+  const rep = h('select', null, [['', 'Не повторять'], ['daily', 'Каждый день'], ['weekdays', 'По будням'], ['weekly', 'Каждую неделю'], ['monthly', 'Каждый месяц']].map(([v, l]) => h('option', {value: v, selected: (t.repeat || '') === v}, l)));
+  const asg = p && p.members ? h('select', null, h('option', {value: ''}, 'Всем'), p.members.map(m => h('option', {value: String(m.id), selected: t.assignee_id === m.id}, m.name))) : null;
+  const notes = h('textarea', {rows: '3'}); notes.value = t.notes || '';
+  const subsBox = h('div', {class: 'card list', style: 'margin-bottom:12px'});
+  const drawSubs = () => { subsBox.replaceChildren(...tasksArr().filter(x => x.parent_id === t.id && !x.deleted).map(taskRow)); };
+  drawSubs();
+  const subIn = h('input', {placeholder: 'Подзадача и Enter', maxlength: '500', onkeydown: async e => {
+   if (e.key !== 'Enter' || !subIn.value.trim()) return; e.preventDefault();
+   const st = {id: Core.uuid(), planner_id: t.planner_id, title: subIn.value.trim(), notes: '', date: t.date, time: null, priority: 'normal', status: 'open', deleted: false,
+    assignee_id: null, parent_id: t.id, repeat: null, postponed: 0, created_at: Date.now(), created_by: S.uid, rev: 0, conflicts: []};
+   subIn.value = ''; await edit(st, 'create', Object.assign({title: st.title, parent_id: t.id}, t.date ? {due: {date: t.date, time: null}} : {})); drawSubs(); }});
+  const conflicts = (t.conflicts || []).map((c, i) => h('div', {class: 'card pad', style: 'margin-bottom:10px;border-color:var(--danger)'},
+   h('b', {text: `Конфликт: ${({title: 'название', notes: 'заметка', due: 'дата', priority: 'приоритет', status: 'состояние', assignee_id: 'исполнитель', repeat: 'повтор', parent_id: 'родитель'})[c.field] || c.field}`}),
+   h('p', {class: 'muted', text: `Ваше: ${fmtVal(c.mine)} · Сейчас: ${fmtVal(c.theirs)}`}),
+   h('div', {class: 'btns'}, h('button', {class: 'btn', onclick: () => resolve(t, i, true), text: 'Оставить моё'}), h('button', {class: 'btn', onclick: () => resolve(t, i, false), text: 'Оставить текущее'}))));
+  const body = h('div', null, conflicts, field('Задача', title),
+   h('div', {style: 'display:grid;grid-template-columns:1fr 1fr;gap:10px'}, field('Дата', date), field('Время', time)),
+   h('div', {style: 'display:grid;grid-template-columns:1fr 1fr;gap:10px'}, field('Приоритет', prio), field('Повтор', rep)),
+   asg ? field('Исполнитель', asg) : null, field('Заметки', notes),
+   t.parent_id ? null : h('div', null, h('div', {class: 'sec-h', text: 'Подзадачи'}), subsBox, field('', subIn)),
+   h('div', {class: 'btns', style: 'margin-top:8px'}, h('button', {class: 'btn primary', onclick: closeSheet, text: 'Готово'}),
+    h('button', {class: 'btn', onclick: () => { closeSheet(); postpone(S.tasks.get(t.id), 1); }, text: 'На завтра'}),
+    h('button', {class: 'btn danger', onclick: () => { const cur = S.tasks.get(t.id); S.sheet.onClose = null; closeSheet(); remove(cur); }, text: 'Удалить'})),
+   h('p', {class: 'muted', style: 'font-size:12.5px', text: (p ? (p.kind === 'personal' ? 'Личное' : p.name) + ' · ' : '') + (t.postponed ? `переносов: ${t.postponed}` : '') + (t.rev === 0 ? ' · ещё не отправлено' : '')}));
+  sheet('Задача', body, () => {  // save the diff on close
+   const cur = S.tasks.get(t.id); if (!cur || cur.deleted) return;
+   const f = {};
+   const nt = title.value.trim(); if (nt && nt !== cur.title) f.title = nt;
+   if ((date.value || null) !== cur.date || (time.value || null) !== (cur.time || null)) f.due = date.value ? {date: date.value, time: time.value || null} : null;
+   if (prio.value !== cur.priority) f.priority = prio.value;
+   if ((rep.value || null) !== (cur.repeat || null)) f.repeat = rep.value || null;
+   if (asg && (asg.value ? +asg.value : null) !== (cur.assignee_id ?? null)) f.assignee_id = asg.value ? +asg.value : null;
+   if (notes.value !== (cur.notes || '')) f.notes = notes.value;
+   if (Object.keys(f).length) edit(cur, cur.rev === 0 && !cur._sent ? 'update' : 'update', f);
+  });
+ }
+ const fmtVal = v => v == null ? '—' : typeof v === 'object' ? (v.date || '') + (v.time ? ' ' + v.time : '') : String(v).slice(0, 80);
+ async function resolve(t, index, takeMine) {
+  try { const r = await Sync.call('api/conflict', {method: 'POST', body: JSON.stringify({id: t.id, index, take_mine: takeMine})});
+   await Store.settle([], [r.task], [], {}); S.tasks.set(r.task.id, r.task); closeSheet(); render(); }
+  catch (e) { toast('Нужна связь с сервером: ' + e.message); }
+ }
+
+ // ---------- profile ----------
+ function profileView() {
+  const v = h('div');
+  v.append(h('h1', {class: 'title', text: S.me ? S.me.user.name : 'Профиль'}));
+  if (S.uid != null) v.append(gameCard());
+  v.append(syncCard());
+  if (!S.offlineOnly) v.append(groupsCard(), settingsCard(), exportCard());
+  return v;
+ }
+ function syncCard() {
+  const box = h('div', {class: 'card'});
+  const st = h('div', {class: 'row'}, h('span', {class: 'grow'}, h('b', {text: SYNC_TEXT[S.sync.state] || ''}),
+   h('small', {text: `${Platform.name} · хранилище: ${({idb: 'IndexedDB', ls: 'localStorage', memory: 'только окно'})[Store.mode]}`})),
+   h('button', {class: 'btn', onclick: () => { Sync.run(); toast('Синхронизирую…'); }, text: 'Сейчас'}));
+  box.append(st);
+  if (S.offlineOnly || !Platform.getToken()) {
+   box.append(h('button', {class: 'row', onclick: () => claimSheet()}, h('span', {class: 'grow'}, h('b', {text: 'У меня есть код подключения'}), h('small', {text: 'Получите его на подключённом устройстве: Профиль → Подключить устройство'}))));
+   if (Platform.kind === 'web') box.append(h('a', {class: 'row', href: '/login'}, h('span', {class: 'grow'}, h('b', {text: 'Войти через Telegram'}))));
+  } else {
+   box.append(h('button', {class: 'row', onclick: pairStart}, h('span', {class: 'grow'}, h('b', {text: 'Подключить устройство или MAX'}), h('small', {text: 'Одноразовый код на 10 минут, вы подтверждаете подключение'}))),
+    h('button', {class: 'row', onclick: () => claimSheet()}, h('span', {class: 'grow'}, h('b', {text: 'Ввести код с другого устройства'}), h('small', {text: 'Для связи аккаунтов MAX и Telegram'}))),
+    h('button', {class: 'row', onclick: devicesSheet}, h('span', {class: 'grow'}, h('b', {text: 'Мои устройства'}), h('small', {text: 'Список и отключение'}))),
+    h('button', {class: 'row', onclick: downloadOffline}, h('span', {class: 'grow'}, h('b', {text: 'Скачать офлайн-приложение'}), h('small', {text: 'Файл planner.html с вашими задачами; синхронизация — по коду подключения'}))));
+   if (Platform.kind === 'web') box.append(h('div', {class: 'row'}, h('span', {class: 'grow'}, h('small', {text: 'Установка как приложения появится, когда у бота будет постоянный адрес. Сейчас откройте ежедневник из Telegram.'}))));
+  }
+  return h('section', null, h('h2', {class: 'sec-h', text: 'Синхронизация и устройства'}), box);
+ }
+ async function pairStart() {
+  let p; try { p = await Sync.call('api/pair/start', {method: 'POST', body: '{}'}); } catch (e) { return toast('Нужна связь: ' + e.message); }
+  const status = h('p', {class: 'muted', text: 'Введите код на новом устройстве или в MAX. Ждём…'});
+  const actions = h('div', {class: 'btns'});
+  sheet('Подключить устройство', h('div', null, h('div', {class: 'code', text: p.code}), p.link ? h('p', {class: 'muted', style: 'font-size:13px;word-break:break-all', text: p.link}) : null, status, actions));
+  const until = Date.now() + p.expires_in * 1000;
+  const poll = async () => {
+   if (!S.sheet || Date.now() > until) { status.textContent = 'Код истёк.'; return; }
+   try {
+    const s = await Sync.call('api/pair/' + p.id);
+    if (s.state === 'claimed') {
+     status.textContent = `Подключается: ${s.name || 'устройство'}${s.other_account ? ' (другой аккаунт — будет связан с вашим)' : ''}. Это вы?`;
+     actions.replaceChildren(h('button', {class: 'btn primary', onclick: () => confirmPair(p.id, true, status, actions), text: 'Да, подключить'}),
+      h('button', {class: 'btn danger', onclick: () => confirmPair(p.id, false, status, actions), text: 'Нет'}));
+     return;
+    }
+   } catch (e) {}
+   setTimeout(poll, 2000);
+  };
+  poll();
+ }
+ async function confirmPair(id, accept, status, actions) {
+  try { const r = await Sync.call(`api/pair/${id}/confirm`, {method: 'POST', body: JSON.stringify({accept})});
+   status.textContent = accept ? 'Готово, устройство подключено.' : 'Отклонено.'; actions.replaceChildren(); }
+  catch (e) { status.textContent = e.message === 'has_data' ? 'У того аккаунта уже есть задачи — объединять молча нельзя. Перенесите их экспортом.' : 'Ошибка: ' + e.message; }
+ }
+ function claimSheet(code) {
+  const inp = h('input', {value: code || '', placeholder: 'XXXXXXXX', maxlength: '12', autocomplete: 'one-time-code', style: 'text-transform:uppercase;letter-spacing:.15em;font-size:20px;text-align:center'});
+  const status = h('p', {class: 'muted'});
+  sheet('Код подключения', h('div', null, field('Код с подключённого устройства', inp), status,
+   h('button', {class: 'btn primary block', onclick: async () => {
+    status.textContent = 'Отправляю…';
+    try {
+     const tok = Platform.getToken();
+     const r = await fetch(Platform.api + 'api/pair/claim', {method: 'POST', headers: Object.assign({'Content-Type': 'application/json'}, tok && !S.offlineOnly ? {Authorization: 'Bearer ' + tok} : {}),
+      body: JSON.stringify({code: inp.value, platform: Platform.kind})});
+     if (!r.ok) throw new Error(r.status === 429 ? 'слишком много попыток, подождите' : 'код не найден или истёк');
+     const c = await r.json();
+     status.textContent = 'Подтвердите подключение на первом устройстве…';
+     const until = Date.now() + 600000;
+     const poll = async () => {
+      if (Date.now() > until) { status.textContent = 'Время вышло.'; return; }
+      const s = await (await fetch(Platform.api + `api/pair/claim/${c.claim_id}`, {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({secret: c.secret})})).json().catch(() => ({}));
+      if (s.token) {
+       Platform.setToken(s.token);
+       try { if (S.offlineOnly && Store.scope) localStorage.setItem('den5-migrate-from', Store.scope); localStorage.removeItem('den5-scope'); } catch (e) {}
+       status.textContent = 'Подключено! Загружаю…'; setTimeout(() => location.reload(), 600); return;
+      }
+      if (s.state === 'rejected') { status.textContent = 'Подключение отклонено.'; return; }
+      setTimeout(poll, 2000);
+     };
+     poll();
+    } catch (e) { status.textContent = 'Ошибка: ' + e.message; }
+   }, text: 'Подключить'})));
+ }
+ async function devicesSheet() {
+  let r; try { r = await Sync.call('api/devices'); } catch (e) { return toast('Нужна связь: ' + e.message); }
+  const list = h('div', {class: 'card'}, r.devices.map(d => h('div', {class: 'row'}, h('span', {class: 'grow'}, h('b', {text: (d.name || d.platform) + (d.current ? ' (это)' : '')}),
+   h('small', {text: 'был активен ' + new Date(d.last_seen_ts * 1000).toLocaleString('ru-RU')})),
+   h('button', {class: 'btn danger', onclick: async () => { await Sync.call('api/devices/' + d.id, {method: 'DELETE'}); if (d.current) { Platform.setToken(null); location.reload(); } else devicesSheet(); }, text: 'Отключить'}))));
+  sheet('Мои устройства', list);
+ }
+ async function downloadOffline() {
+  try {
+   const r = await Sync.call('api/offline-link', {method: 'POST', body: '{}'});
+   Platform.download(new URL(r.path, Platform.api).toString(), 'planner.html');
+  } catch (e) { toast('Нужна связь: ' + e.message); }
+ }
+ function groupsCard() {
+  const groups = S.planners.filter(p => p.kind !== 'personal');
+  const box = h('div', {class: 'card'}, groups.map(g => h('button', {class: 'row', onclick: () => groupSheet(g.id)},
+   h('span', {class: 'grow'}, h('b', {text: (g.kind === 'team' ? '🏢 ' : '👨‍👩‍👧 ') + g.name}), h('small', {text: `${g.kind === 'team' ? 'Подразделение' : 'Семья'} · ${g.members.length} уч. · вы: ${({owner: 'владелец', admin: 'админ', member: 'участник'})[g.role]}`})))),
+   h('button', {class: 'row', onclick: newGroupSheet}, h('b', {text: '+ Создать семью или подразделение'})),
+   h('button', {class: 'row', onclick: joinSheet}, h('b', {text: 'Вступить по коду приглашения'})));
+  return h('section', null, h('h2', {class: 'sec-h', text: 'Семья и работа'}), box);
+ }
+ async function refreshMe() { const me = await Sync.call('api/me'); S.me = me; S.planners = me.planners; await Store.setMeta({planners: me.planners, me}); Sync.run(); render(); }
+ function newGroupSheet() {
+  const kind = h('select', null, h('option', {value: 'family'}, 'Семья'), h('option', {value: 'team'}, 'Подразделение / работа'));
+  const name = h('input', {maxlength: '60', placeholder: 'Например, Отдел ИБ'});
+  const parents = S.planners.filter(p => p.kind === 'team' && p.can_manage);
+  const parent = parents.length ? h('select', null, h('option', {value: ''}, '— самостоятельное —'), parents.map(p => h('option', {value: String(p.id)}, p.name))) : null;
+  sheet('Новая группа', h('div', null, field('Тип', kind), field('Название', name), parent ? field('Входит в', parent) : null,
+   h('button', {class: 'btn primary block', onclick: async () => {
+    const body = {kind: kind.value, name: name.value}; if (parent && parent.value && kind.value === 'team') body.parent_id = +parent.value;
+    try { const r = await Sync.call('api/groups', {method: 'POST', body: JSON.stringify(body)}); await refreshMe(); groupSheet(r.id); } catch (e) { toast('Не получилось: ' + e.message); }
+   }, text: 'Создать'})));
+ }
+ function joinSheet() {
+  const code = h('input', {maxlength: '40', autocomplete: 'off'});
+  sheet('Вступить в группу', h('div', null, field('Код приглашения', code), h('button', {class: 'btn primary block', onclick: async () => {
+   try { const r = await Sync.call('api/groups/join', {method: 'POST', body: JSON.stringify({code: code.value})}); await refreshMe(); groupSheet(r.id); } catch (e) { toast('Не получилось: ' + e.message); }
+  }, text: 'Вступить'})));
+ }
+ function groupSheet(id) {
+  const g = planner(id); if (!g) return closeSheet();
+  const act = async (fn, msg) => { try { await fn(); await refreshMe(); groupSheet(id); if (msg) toast(msg); } catch (e) { toast('Не получилось: ' + e.message); } };
+  const members = h('div', {class: 'card', style: 'margin-bottom:12px'}, g.members.map(m => {
+   let ctl = h('small', {text: ({owner: 'владелец', admin: 'админ', member: 'участник'})[m.role]});
+   if (g.role === 'owner' && m.role !== 'owner') ctl = h('select', {'aria-label': 'Роль: ' + m.name, onchange: e => act(() => Sync.call(`api/groups/${id}/members/${m.id}`, {method: 'PUT', body: JSON.stringify({role: e.target.value})}))},
+    h('option', {value: 'member', selected: m.role === 'member'}, 'участник'), h('option', {value: 'admin', selected: m.role === 'admin'}, 'админ'));
+   const kick = m.id !== S.uid && m.role !== 'owner' && (g.role === 'owner' || (g.role === 'admin' && m.role === 'member'));
+   return h('div', {class: 'row'}, h('span', {class: 'grow', text: m.name + (m.id === S.uid ? ' (вы)' : '')}), ctl,
+    kick ? h('button', {class: 'btn danger', 'aria-label': 'Убрать ' + m.name, onclick: () => act(() => Sync.call(`api/groups/${id}/members/${m.id}`, {method: 'DELETE'}))}, '✕') : null);
+  }));
+  const inviteLink = g.code && S.me && S.me.bot ? `https://t.me/${S.me.bot}?start=fam_${g.code}` : null;
+  sheet((g.kind === 'team' ? '🏢 ' : '👨‍👩‍👧 ') + g.name, h('div', null,
+   g.code ? h('div', {class: 'card pad', style: 'margin-bottom:12px'}, h('div', {class: 'muted', text: 'Код приглашения'}), h('div', {class: 'code', text: g.code}),
+    h('div', {class: 'btns', style: 'margin-top:10px'}, inviteLink ? h('button', {class: 'btn', onclick: () => navigator.clipboard && navigator.clipboard.writeText(inviteLink).then(() => toast('Ссылка скопирована')), text: 'Скопировать ссылку'}) : null,
+     g.can_manage ? h('button', {class: 'btn', onclick: () => confirm('Старый код перестанет работать. Продолжить?') && act(() => Sync.call(`api/groups/${id}/code`, {method: 'POST', body: '{}'})), text: 'Новый код'}) : null))
+    : h('p', {class: 'muted', text: 'Приглашать могут владелец и админы.'}),
+   h('div', {class: 'sec-h', text: `Участники · ${g.members.length}`}), members,
+   g.can_manage && g.kind === 'team' ? h('label', {class: 'row'}, h('input', {type: 'checkbox', checked: g.open_invite, onchange: e => act(() => Sync.call(`api/groups/${id}`, {method: 'PUT', body: JSON.stringify({open_invite: e.target.checked})}))}), h('span', {text: 'Приглашать могут все участники'})) : null,
+   h('div', {class: 'btns', style: 'margin-top:12px'}, h('button', {class: 'btn primary', onclick: () => { S.filter = id; S.tab = 'plan'; closeSheet(); render(); }, text: 'Открыть дела'}),
+    h('button', {class: 'btn danger', onclick: () => confirm('Выйти из группы?') && act(async () => { await Sync.call(`api/groups/${id}/members/${S.uid}`, {method: 'DELETE'}); S.filter = 'all'; closeSheet(); }), text: 'Выйти из группы'}))));
+ }
+ function settingsCard() {
+  const u = (S.me && S.me.user) || {};
+  const sum = h('input', {type: 'time', value: u.summary_time || '08:00', onchange: e => Sync.call('api/settings', {method: 'PUT', body: JSON.stringify({summary_time: e.target.value})}).then(() => toast('Сохранено')).catch(er => toast(er.message))});
+  let th = 'auto'; try { th = localStorage.getItem('den5-theme') || 'auto'; } catch (e) {}
+  const theme = h('select', {onchange: e => { try { localStorage.setItem('den5-theme', e.target.value); } catch (er) {} applyTheme(); }},
+   [['auto', 'Как в системе'], ['light', 'Светлая'], ['dark', 'Тёмная']].map(([v, l]) => h('option', {value: v, selected: th === v}, l)));
+  return h('section', null, h('h2', {class: 'sec-h', text: 'Настройки'}), h('div', {class: 'card pad'},
+   field('Утренняя сводка в боте', sum), field('Тема', theme),
+   h('button', {class: 'btn danger', onclick: async () => { if (!confirm('Выйти на этом устройстве? Неотправленные изменения пропадут.')) return; try { await Sync.call('api/logout', {method: 'POST', body: '{}'}); } catch (e) {} Platform.setToken(null); location.reload(); }, text: 'Выйти на этом устройстве'})));
+ }
+ function exportCard() {
+  const pid = S.filter === 'all' ? personal().id : S.filter;
+  const go = async fmt => { try { const r = await Sync.call('api/export-link', {method: 'POST', body: JSON.stringify({format: fmt, planner_id: pid})}); Platform.download(new URL(r.path, Platform.api).toString(), 'planner.' + fmt); } catch (e) { toast(e.message); } };
+  const chat = async fmt => { try { await Sync.call('api/export', {method: 'POST', body: JSON.stringify({format: fmt, planner_id: pid})}); toast('Файл отправлен в чат с ботом'); } catch (e) { toast(e.message); } };
+  return h('section', null, h('h2', {class: 'sec-h', text: 'Выгрузка'}), h('div', {class: 'card pad'}, h('div', {class: 'btns'},
+   ['csv', 'ics', 'json'].map(f => h('button', {class: 'btn', onclick: () => Platform.canPushToChat ? chat(f) : go(f), text: f.toUpperCase() + (Platform.canPushToChat ? ' → в чат' : '')})))));
+ }
+ function applyTheme() {
+  if (Platform.kind === 'telegram') return;
+  let th = 'auto'; try { th = localStorage.getItem('den5-theme') || 'auto'; } catch (e) {}
+  if (th === 'auto') delete document.documentElement.dataset.theme; else document.documentElement.dataset.theme = th;
+ }
+
+ // ---------- smart input preview ----------
+ function renderPreview() {
+  const box = $('#preview'); box.replaceChildren();
+  const text = $('#compose').value;
+  if (!text.trim()) { S.draft = null; return; }
+  const p = Core.parse(text, Date.now(), S.planners);
+  const removed = (S.draft && S.draft.removed) || [];
+  S.draft = {p, removed};
+  for (const t of p.tokens) if (!removed.includes(t.kind)) box.append(h('button', {'aria-label': 'Убрать: ' + t.label, onclick: () => { S.draft.removed.push(t.kind); renderPreview(); }, text: t.label}));
+ }
+
+ // ---------- boot ----------
+ async function boot() {
+  Platform.ready(); applyTheme();
+  document.getElementById('compose').addEventListener('input', () => { if (S.draft) S.draft.removed = S.draft.removed.filter(() => true); renderPreview(); });
+  document.getElementById('compose-form').addEventListener('submit', e => { e.preventDefault(); addFromInput(); });
+  document.getElementById('sync').addEventListener('click', () => { S.tab = 'me'; render(); Sync.run(); });
+  for (const b of document.querySelectorAll('[data-tab]')) b.addEventListener('click', () => { S.tab = b.dataset.tab; if (S.tab === 'cal') loadEvents(); render(); });
+  addEventListener('resize', () => render());
+  Sync.config({api: Platform.api, onStatus: st => { if (st.state === 'notice') return toast(st.text); S.sync = st; renderSync(); },
+   onChanged: () => reload(), onAuth: async () => { if (Platform.kind === 'telegram' || Platform.kind === 'max') { Platform.setToken(null); try { const t = await Platform.auth(true); Sync.config({token: t}); Sync.poke(); } catch (e) {} } }});
+
+  let token = null;
+  try { token = await Platform.auth(); } catch (e) { toast(e.message); }
+  const pairCode = Platform.pairCodeFromLink();
+  let last = null; try { last = localStorage.getItem('den5-scope'); } catch (e) {}
+  if (!token && Platform.kind === 'web' && !last) return welcome(pairCode);
+  // 1) open local data first (instant), 2) then talk to the server
+  const scope = token ? (last && last.startsWith('u') ? last : 'pending') : (Platform.kind === 'file' ? 'file-' + (Platform.CFG.user_id || 'x') : 'local');
+  await openScope(scope);
+  if (Platform.kind === 'file' && Platform.CFG.snapshot && !(await Store.getMeta('seeded'))) {
+   const snap = Platform.CFG.snapshot;
+   await Store.settle([], snap.tasks, [], {planners: snap.planners, seeded: true});
+   S.uid = Platform.CFG.user_id; await reload();
+  }
+  if (!token) { S.offlineOnly = true; S.uid = S.uid ?? Platform.CFG.user_id ?? 0; await ensureLocalPlanner(); render(); if (pairCode) claimSheet(pairCode); return; }
+  Sync.config({token});
+  try {
+   const me = await Sync.call('api/me');
+   const want = 'u' + me.user.id;
+   let from = null; try { from = localStorage.getItem('den5-migrate-from'); } catch (e) {}
+   if (!from && Store.scope === 'pending') from = 'pending';  // first start: data written before the account was known
+   if (from && from !== want) await migrateFrom(from, want, me);
+   if (Store.scope !== want) await openScope(want);
+   try { localStorage.setItem('den5-scope', want); } catch (e) {}
+   S.me = me; S.uid = me.user.id; S.planners = me.planners; await Store.setMeta({planners: me.planners, me});
+   render(); Sync.run(); loadEvents();
+   if (pairCode) claimSheet(pairCode);
+  } catch (e) {
+   const me = await Store.getMeta('me');
+   if (me) { S.me = me; S.uid = me.user.id; S.planners = me.planners; }
+   render(); Sync.run();
+  }
+ }
+ async function openScope(scope) {
+  const mode = await Store.open(scope);
+  S.tasks = new Map((await Store.allTasks()).map(t => [t.id, t]));
+  S.planners = (await Store.getMeta('planners')) || S.planners;
+  const me = await Store.getMeta('me'); if (me) { S.me = me; S.uid = me.user.id; }
+  if (mode === 'memory') toast('Хранилище браузера недоступно: данные живут только в этом окне', null, 8000);
+  render();
+ }
+ /** Tasks made before connecting (no login / local file) move into the account — after an explicit yes. */
+ async function migrateFrom(from, to, me) {
+  try { localStorage.removeItem('den5-migrate-from'); } catch (e) {}
+  await Store.open(from);
+  const oldTasks = (await Store.allTasks()).filter(t => !t.deleted);
+  const oldOps = await Store.outbox();
+  const fresh = oldTasks.filter(t => !t.rev);
+  if (!fresh.length && !oldOps.length) return;
+  const n = new Set([...fresh.map(t => t.id), ...oldOps.map(o => o.id)]).size;
+  if (!confirm(`На этом устройстве есть ${n} задач(и), сделанных без входа. Перенести их в ваш аккаунт?`)) return;
+  const personalId = (me.planners.find(p => p.kind === 'personal') || {}).id;
+  const fix = pid => (me.planners.some(p => p.id === pid) ? pid : personalId);
+  await Store.open(to);
+  const tasks = [], ops = [];
+  fresh.sort((a, b) => (a.parent_id ? 1 : 0) - (b.parent_id ? 1 : 0));  // parents are created before subtasks
+  for (const t of fresh) {
+   const nt = Object.assign({}, t, {planner_id: fix(t.planner_id), created_by: me.user.id});
+   tasks.push(nt);
+   const fields = {title: nt.title, notes: nt.notes || '', priority: nt.priority, status: nt.status};
+   if (nt.date) fields.due = {date: nt.date, time: nt.time};
+   if (nt.repeat && nt.date) fields.repeat = nt.repeat;
+   if (nt.parent_id) fields.parent_id = nt.parent_id;
+   ops.push({op_id: Core.uuid(), id: nt.id, op: {op_id: Core.uuid(), type: 'create', id: nt.id, planner_id: nt.planner_id, fields}});
+  }
+  for (const o of oldOps) if (o.op.type !== 'create') ops.push({op_id: o.op_id, id: o.id, op: o.op});  // edits of snapshot tasks
+  await Store.commit(tasks, ops);
+ }
+ async function ensureLocalPlanner() {
+  if (!S.planners.length) { S.planners = [{id: -1, kind: 'personal', name: 'Личное', role: 'owner'}]; await Store.setMeta({planners: S.planners}); }
+ }
+ function welcome(pairCode) {
+  $('#app').classList.add('hidden');
+  const w = h('main', {class: 'welcome'}, h('h1', {text: 'День'}), h('p', {class: 'muted', text: 'Простой ежедневник: Telegram, MAX, браузер и файл на устройстве — одни и те же дела.'}),
+   h('a', {class: 'btn primary block', href: '/login'}, 'Войти через Telegram'),
+   h('button', {class: 'btn block', onclick: () => { w.remove(); $('#app').classList.remove('hidden'); startLocal().then(() => claimSheet(pairCode)); }, text: 'У меня есть код подключения'}),
+   h('button', {class: 'btn block', onclick: () => { w.remove(); $('#app').classList.remove('hidden'); startLocal(); }, text: 'Начать без входа (только это устройство)'}));
+  document.body.append(w);
+  if (pairCode) { w.remove(); $('#app').classList.remove('hidden'); startLocal().then(() => claimSheet(pairCode)); }
+ }
+ async function startLocal() {
+  try { localStorage.setItem('den5-scope', 'local'); } catch (e) {}
+  await openScope('local'); S.offlineOnly = true; S.uid = 0; await ensureLocalPlanner(); render();
+ }
+ window.DenApp = {S, render, edit, nextOccurrence};
+ boot();
+})();
+</script>
+</body>
+</html>
