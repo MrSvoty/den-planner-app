@@ -4,7 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,interactive-widget=resizes-content">
 <meta name="robots" content="noindex">
-<meta name="theme-color" content="#0B0C10">
+<meta name="theme-color" content="#FAF8F3" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#141311" media="(prefers-color-scheme: dark)">
 <title>День</title>
 <!-- TEMPORARY local patch (see LOCAL_PATCHES.md): static loader for the «День» client while the bot has no
      permanent domain. The bot opens https://mrsvoty.github.io/den-planner-app/?u=<tunnel>&s=<ECDSA signature>.
@@ -12,12 +13,12 @@
      No user data, no secrets. Telegram initData is sent nowhere until the backend signature checks out. -->
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <style>
-html,body{margin:0;height:100%;background:#0B0C10;color:#F1F2F5;font:16px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
-@media(prefers-color-scheme:light){html,body{background:#F5F6F8;color:#14161B}}
+html,body{margin:0;height:100%;background:#141311;color:#F3EFE6;font:16px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+@media(prefers-color-scheme:light){html,body{background:#FAF8F3;color:#1C1B19}}
 #l{white-space:pre-line;min-height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:24px;box-sizing:border-box;text-align:center}
-.sp{width:36px;height:36px;border-radius:50%;border:4px solid #8B9DFF33;border-top-color:#8B9DFF;animation:r 1s linear infinite}
+.sp{width:36px;height:36px;border-radius:50%;border:4px solid #E8492A33;border-top-color:#E8492A;animation:r 1s linear infinite}
 @keyframes r{to{transform:rotate(360deg)}}
-button{font:inherit;padding:10px 18px;border-radius:12px;border:0;background:#8B9DFF;color:#0B0C10;font-weight:700}
+button{font:inherit;padding:10px 18px;border-radius:12px;border:0;background:#E8492A;color:#FFFFFF;font-weight:700}
 </style>
 </head>
 <body>
@@ -35,7 +36,7 @@ button{font:inherit;padding:10px 18px;border-radius:12px;border:0;background:#8B
  var q=new URLSearchParams(location.search),u=(q.get('u')||'').replace(/\/+$/,''),sig=q.get('s')||'';
  // the backend URL must be signed by the bot (ECDSA P-256, private key in the bot's data/); anyone can open a tunnel
  var PUBKEY='MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEvfDzTlhnSRzNsoLPi6DBpv0vmeDmVyXI+/K8cRh20pmdW2RKkPmESQmdcnqUCLDXGSecsln/cQRLSdDJHPdbtQ==';
- var APP_FILE='app.787a19af88.html';
+ var APP_FILE='app.9bba5d156d.html';
  if(!/^https:\/\/[a-z0-9-]+(\.[a-z0-9-]+)*(:\d{1,5})?$/i.test(u)||!/^[A-Za-z0-9_-]{80,90}$/.test(sig)||!PUBKEY||!(window.crypto&&crypto.subtle&&window.TextEncoder)){fail(DIRECT);return;}
  function bytes(b64){b64=b64.replace(/-/g,'+').replace(/_/g,'/');while(b64.length%4)b64+='=';var s=atob(b64),a=new Uint8Array(s.length);for(var i=0;i<s.length;i++)a[i]=s.charCodeAt(i);return a;}
  var tries=0,done=false,t0=Date.now();

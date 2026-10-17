@@ -1,0 +1,2 @@
+Fonts: Onest, Unbounded, Caveat — SIL Open Font License 1.1 (https://openfontlicense.org).
+Source: Google Fonts; cyrillic and latin subsets, served locally (no requests to third parties).
