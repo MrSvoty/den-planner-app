@@ -25,8 +25,8 @@ button{font:inherit;padding:10px 18px;border-radius:12px;border:0;background:#3f
 (function(){
  'use strict';
  var en=false;try{en=localStorage.getItem('tgp-lang')==='en';}catch(e){}
- var M=en?{load:'Loading planner…',stale:'The planner address has changed or the server is restarting.',how:'Close this window and open the planner again with the «Ежедневник» menu button or the /app command in the bot.',retry:'Try again',close:'Close',direct:'Open the planner from the bot: «Ежедневник» menu button or /app.'}
-         :{load:'Загрузка ежедневника…',stale:'Адрес ежедневника обновился или сервер перезапускается.',how:'Закройте окно и откройте ежедневник снова кнопкой меню «Ежедневник» или командой /app в боте.',retry:'Повторить',close:'Закрыть',direct:'Откройте ежедневник из бота: кнопка меню «Ежедневник» или команда /app.'};
+ var M=en?{load:'Loading planner…',stale:'Could not load the planner.',how:'Check your internet connection, close this window and open the planner again with the «Ежедневник» menu button or /app.',retry:'Try again',close:'Close',direct:'Open the planner from the bot: «Ежедневник» menu button or /app.'}
+         :{load:'Загрузка ежедневника…',stale:'Не удалось загрузить ежедневник.',how:'Проверьте интернет, закройте окно и откройте ежедневник снова кнопкой меню «Ежедневник» или командой /app.',retry:'Повторить',close:'Закрыть',direct:'Откройте ежедневник из бота: кнопка меню «Ежедневник» или команда /app.'};
  var tg=window.Telegram&&window.Telegram.WebApp;
  try{tg&&tg.ready();tg&&tg.expand();}catch(e){}
  var box=document.getElementById('l');
@@ -38,6 +38,7 @@ button{font:inherit;padding:10px 18px;border-radius:12px;border:0;background:#3f
  // only our tunnel providers / own domain are accepted as backend
  var ok=/^https:\/\/[a-z0-9-]+(\.[a-z0-9-]+)*\.(pinggy-free\.link|pinggy\.link|pinggy\.net|pinggy\.online|trycloudflare\.com)$/i.test(u);
  if(!ok){fail(M.direct);return;}
+ var APP_FILE='app.a2dd35e132.html';
  var initData=(tg&&tg.initData)||'';
  var host=u.replace(/^https:\/\//,'');
  var stage='start',tries=0,done=false,t0=Date.now();
@@ -53,10 +54,11 @@ button{font:inherit;padding:10px 18px;border-radius:12px;border:0;background:#3f
   tries++;
   var ctl=window.AbortController?new AbortController():null;
   var to=setTimeout(function(){ctl&&ctl.abort();},15000);
-  setStage('connect',(en?'Connecting to the server…':'Подключение к серверу…')+(tries>1?' ('+tries+')':''));
-  fetch(u+'/app/',{headers:{'X-Pinggy-No-Screen':'1','X-Init-Data':initData},cache:'no-store',credentials:'omit',signal:ctl?ctl.signal:undefined}).then(function(r){
+  setStage('connect',(en?'Loading the planner…':'Загрузка ежедневника…')+(tries>1?' ('+tries+')':''));
+  // the app itself (HTML/JS/CSS/i18n) is a static, versioned file on GitHub Pages; the tunnel serves only small JSON API calls
+  fetch(APP_FILE,{cache:'force-cache',credentials:'omit',signal:ctl?ctl.signal:undefined}).then(function(r){
    if(!r.ok)throw Error('HTTP '+r.status);
-   setStage('download',en?'Loading the app…':'Загрузка приложения…');
+   setStage('download',en?'Loading the planner…':'Загрузка ежедневника…');
    return r.text();
   }).then(function(html){
    clearTimeout(to);
