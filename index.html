@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>Ежедневник</title>
+<!-- Static loader for the Telegram Mini App «Ежедневник» (@napominalkaMINE_bot).
+     Contains no user data and no secrets. The bot opens this page as
+     https://mrsvoty.github.io/den-planner-app/?u=<current backend URL>; the page fetches the app from that
+     backend with the X-Pinggy-No-Screen header (so no tunnel warning page) and renders it here.
+     Telegram initData (in the URL #hash) stays on this page and is sent only to the backend in X-Init-Data. -->
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+html,body{margin:0;height:100%;background:#f6f5f1;color:#24323f;font:16px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+#l{min-height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:24px;box-sizing:border-box;text-align:center}
+.sp{width:36px;height:36px;border-radius:50%;border:4px solid #d7dfe7;border-top-color:#3f6177;animation:r 1s linear infinite}
+@keyframes r{to{transform:rotate(360deg)}}
+button{font:inherit;padding:10px 18px;border-radius:12px;border:0;background:#3f6177;color:#fff}
+</style>
+</head>
+<body>
+<div id="l"><div class="sp"></div><div id="m">Загрузка ежедневника…</div></div>
+<script>
+(function(){
+ 'use strict';
+ var en=false;try{en=localStorage.getItem('tgp-lang')==='en';}catch(e){}
+ var M=en?{load:'Loading planner…',stale:'The planner address has changed or the server is restarting.',how:'Close this window and open the planner again with the «Ежедневник» menu button or the /app command in the bot.',retry:'Try again',close:'Close',direct:'Open the planner from the bot: «Ежедневник» menu button or /app.'}
+         :{load:'Загрузка ежедневника…',stale:'Адрес ежедневника обновился или сервер перезапускается.',how:'Закройте окно и откройте ежедневник снова кнопкой меню «Ежедневник» или командой /app в боте.',retry:'Повторить',close:'Закрыть',direct:'Откройте ежедневник из бота: кнопка меню «Ежедневник» или команда /app.'};
+ var tg=window.Telegram&&window.Telegram.WebApp;
+ try{tg&&tg.ready();tg&&tg.expand();}catch(e){}
+ var box=document.getElementById('l');
+ document.getElementById('m').textContent=M.load;
+ function fail(msg){box.innerHTML='';var p=document.createElement('p');p.textContent=msg;box.appendChild(p);
+  var r=document.createElement('button');r.textContent=M.retry;r.onclick=function(){location.reload();};box.appendChild(r);
+  if(tg&&tg.close){var c=document.createElement('button');c.textContent=M.close;c.style.background='#8a98a6';c.onclick=function(){tg.close();};box.appendChild(c);}}
+ var q=new URLSearchParams(location.search),u=(q.get('u')||'').replace(/\/+$/,'');
+ // only our tunnel providers / own domain are accepted as backend
+ var ok=/^https:\/\/[a-z0-9-]+(\.[a-z0-9-]+)*\.(pinggy-free\.link|pinggy\.link|pinggy\.net|pinggy\.online|trycloudflare\.com)$/i.test(u);
+ if(!ok){fail(M.direct);return;}
+ var tries=0;
+ function load(){
+  tries++;
+  fetch(u+'/app/',{headers:{'X-Pinggy-No-Screen':'1'},cache:'no-store',credentials:'omit'}).then(function(r){
+   if(!r.ok)throw Error('HTTP '+r.status);return r.text();
+  }).then(function(html){
+   if(html.indexOf('id="planner-seed"')<0)throw Error('not the planner');
+   html=html.replace(/<script[^>]*telegram-web-app\.js[^>]*><\/script>/,'');
+   html=html.replace(/<head>/i,'<head><script>window.TGP_API_BASE='+JSON.stringify(u+'/')+';<\/script>');
+   document.open();document.write(html);document.close();
+  }).catch(function(e){
+   if(tries<3){setTimeout(load,2000*tries);return;}
+   fail(M.stale+' '+M.how);
+  });
+ }
+ load();
+})();
+</script>
+</body>
+</html>
