@@ -12,11 +12,11 @@
      Telegram initData (in the URL #hash) stays on this page and is sent only to the backend in X-Init-Data. -->
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <style>
-html,body{margin:0;height:100%;background:#f6f5f1;color:#24323f;font:16px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+html,body{margin:0;height:100%;background:#0B0C10;color:#F1F2F5;font:16px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
 #l{white-space:pre-line;min-height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:24px;box-sizing:border-box;text-align:center}
-.sp{width:36px;height:36px;border-radius:50%;border:4px solid #d7dfe7;border-top-color:#3f6177;animation:r 1s linear infinite}
+.sp{width:36px;height:36px;border-radius:50%;border:4px solid #1D2028;border-top-color:#8B9DFF;animation:r 1s linear infinite}
 @keyframes r{to{transform:rotate(360deg)}}
-button{font:inherit;padding:10px 18px;border-radius:12px;border:0;background:#3f6177;color:#fff}
+button{font:inherit;padding:10px 18px;border-radius:12px;border:0;background:#8B9DFF;color:#0B0C10;font-weight:700}
 </style>
 </head>
 <body>
@@ -41,7 +41,7 @@ button{font:inherit;padding:10px 18px;border-radius:12px;border:0;background:#3f
  var verified=false;
  if(!/^https:\/\/[a-z0-9-]+(\.[a-z0-9-]+)*(:\d{1,5})?$/i.test(u)||!/^[A-Za-z0-9_-]{80,90}$/.test(sig)||!PUBKEY||!(window.crypto&&crypto.subtle&&window.TextEncoder)){fail(M.direct);return;}
  function bytes(b64){b64=b64.replace(/-/g,'+').replace(/_/g,'/');while(b64.length%4)b64+='=';var s=atob(b64),a=new Uint8Array(s.length);for(var i=0;i<s.length;i++)a[i]=s.charCodeAt(i);return a;}
- var APP_FILE='app.c4c6d92307.html';
+ var APP_FILE='app.c4cf3ef4b7.html';
  var initData=(tg&&tg.initData)||'';
  var host=u.replace(/^https:\/\//,'');
  var stage='start',tries=0,done=false,t0=Date.now();
